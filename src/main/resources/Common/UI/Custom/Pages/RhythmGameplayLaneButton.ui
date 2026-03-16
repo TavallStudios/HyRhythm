@@ -1,0 +1,37 @@
+$C = "../Common.ui";
+
+@LaneReceptorBackground = (
+  TexturePath: "../Common/Buttons/Secondary.png",
+  Border: 12
+);
+
+@LaneReceptorHeldBackground = (
+  TexturePath: "../Common/Buttons/Primary.png",
+  Border: 12
+);
+
+@LaneButtonStyle = (
+  Default: (
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #f5f9ff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  ),
+  Hovered: (
+    Background: #ffffff(0.04),
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #f5f9ff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  ),
+  Pressed: (
+    Background: #ffffff(0.10),
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #ffffff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  )
+);
+
+Group {
+  Anchor: (Width: 240, Height: 78);
+  LayoutMode: Left;
+
+  TextButton #LaneButton {
+    Anchor: (Width: 240, Height: 78);
+    Background: @LaneReceptorBackground;
+    Padding: (Full: 6);
+    Style: @LaneButtonStyle;
+  }
+}

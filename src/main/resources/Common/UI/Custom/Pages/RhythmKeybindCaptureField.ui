@@ -1,0 +1,13 @@
+$C = "../Common.ui";
+
+Group #CaptureFieldRoot {
+  Anchor: (Width: 320, Height: 44);
+
+  TextField #CaptureInput {
+    Anchor: (Width: 320, Height: 44);
+    AutoFocus: true;
+    AutoSelectAll: true;
+    MaxLength: 1;
+    PlaceholderText: "Press a key";
+  }
+}
