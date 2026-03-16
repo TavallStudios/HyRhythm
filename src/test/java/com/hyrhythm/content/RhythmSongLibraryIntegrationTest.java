@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RhythmSongLibraryIntegrationTest {
@@ -90,6 +91,27 @@ class RhythmSongLibraryIntegrationTest {
         assertEquals("tp na ame", importedChart.metadata().title());
         assertEquals("tp-na-ame.ogg", importedChart.metadata().audioFileName());
         assertTrue(songLibraryHarness.listRhythmSongs().stream().anyMatch(song -> song.songId().equals("zeratch-tp-na-ame")));
+        assertEquals("Zeratch-tp-na-ame", songLibraryHarness.findRhythmSoundEventIdBySongId("zeratch-tp-na-ame").orElseThrow());
+        assertTrue(Files.isRegularFile(
+            tempDataDirectory.resolve("rhythm")
+                .resolve("generated-asset-pack")
+                .resolve("Server")
+                .resolve("Audio")
+                .resolve("SoundEvents")
+                .resolve("HyRhythm")
+                .resolve("Imported")
+                .resolve("Zeratch-tp-na-ame.json")
+        ));
+        assertFalse(Files.exists(
+            tempDataDirectory.resolve("rhythm")
+                .resolve("generated-asset-pack")
+                .resolve("Server")
+                .resolve("Audio")
+                .resolve("SoundEvents")
+                .resolve("HyRhythm")
+                .resolve("Imported")
+                .resolve("zeratch-tp-na-ame.json")
+        ));
     }
 
     private static final class RhythmSongLibraryHarness implements RhythmSongLibraryAccess {

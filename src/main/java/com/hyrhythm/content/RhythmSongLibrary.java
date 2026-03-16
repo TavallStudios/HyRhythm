@@ -34,7 +34,6 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
     private static final String BUILT_IN_DEBUG_CHART = "content/charts/debug/test-4k.osu";
     private static final String DEBUG_CHART_ID = "debug/test-4k";
     private static final String GENERATED_ASSET_PACK_ID = "HyRhythm:ImportedSongs";
-    private static final String GENERATED_SOUND_EVENT_ROOT = "hyrhythm/imported";
     private static final String GENERATED_SOUND_FILE_ROOT = "Sounds/HyRhythm/Imported";
     private static final String GENERATED_SOUND_EVENT_PATH = "Server/Audio/SoundEvents";
     private static final String GENERATED_FFMPEG_ENV = "HYRHYTHM_FFMPEG_BIN";
@@ -310,7 +309,12 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
             logRhythmInfo(
                 "content",
                 "song_audio_registered",
-                Map.of("songId", songId, "soundEventId", soundEventId(songId), "soundFile", soundFile)
+                Map.of(
+                    "songId", songId,
+                    "soundEventId", soundEventId(songId),
+                    "soundEventFile", soundEventFileName(songId),
+                    "soundFile", soundFile
+                )
             );
         } catch (Exception exception) {
             logRhythmWarn(
@@ -364,7 +368,7 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
             .resolve(GENERATED_SOUND_EVENT_PATH)
             .resolve("HyRhythm")
             .resolve("Imported")
-            .resolve(slug(songId) + ".json");
+            .resolve(soundEventFileName(songId));
         Files.createDirectories(soundEventFile.getParent());
         Files.writeString(
             soundEventFile,
@@ -507,7 +511,19 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
     }
 
     private static String soundEventId(String songId) {
-        return GENERATED_SOUND_EVENT_ROOT + "/" + slug(songId);
+        return assetKey(songId);
+    }
+
+    private static String soundEventFileName(String songId) {
+        return soundEventId(songId) + ".json";
+    }
+
+    private static String assetKey(String rawValue) {
+        String normalized = slug(rawValue);
+        if (normalized.isBlank()) {
+            return "Unknown";
+        }
+        return Character.toUpperCase(normalized.charAt(0)) + normalized.substring(1);
     }
 
     private static String slug(String rawValue) {
