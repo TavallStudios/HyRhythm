@@ -1,0 +1,20 @@
+{
+  "Group": "${project.groupId}",
+  "Name": "${project.name}",
+  "Version": "${project.version}",
+  "Description": "HyRhythm Hytale Java plugin",
+  "Authors": [
+    {
+      "Name": "HyRhythm",
+      "Email": "",
+      "Url": ""
+    }
+  ],
+  "Website": "",
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true,
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "ServerVersion": "*",
+  "Main": "${plugin.main.class}"
+}

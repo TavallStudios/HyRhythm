@@ -1,0 +1,256 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {}
+
+$C.@Container #GameplayRoot {
+  Anchor: (Width: 1120, Height: 760);
+  LayoutMode: Top;
+
+  Group #Header {
+    LayoutMode: Top;
+    Anchor: (Bottom: 12);
+
+    Label #SongTitle {
+      Style: (FontSize: 24, RenderBold: true, RenderUppercase: true);
+      Anchor: (Bottom: 4);
+    }
+
+    Label #SongMeta {
+      Style: (FontSize: 15, TextColor: #b4c0cb);
+      Anchor: (Bottom: 6);
+    }
+
+    Label #BindSummary {
+      Style: (FontSize: 13, TextColor: #8e9bab);
+      Anchor: (Bottom: 6);
+    }
+
+    Label #StatusText {
+      Style: (FontSize: 14, TextColor: #d9e3ee);
+      Anchor: (Bottom: 8);
+    }
+  }
+
+  Group #StatsBar {
+    LayoutMode: Left;
+    Anchor: (Bottom: 12);
+
+    Group {
+      Anchor: (Width: 180, Right: 10);
+      Background: (Color: #0b1219(0.75));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label {
+        Text: "Clock";
+        Style: (FontSize: 12, RenderUppercase: true, RenderBold: true, TextColor: #7f8ea0);
+      }
+
+      Label #ClockValue {
+        Style: (FontSize: 18, RenderBold: true, TextColor: #f0f5fb);
+      }
+    }
+
+    Group {
+      Anchor: (Width: 180, Right: 10);
+      Background: (Color: #0b1219(0.75));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label {
+        Text: "Score";
+        Style: (FontSize: 12, RenderUppercase: true, RenderBold: true, TextColor: #7f8ea0);
+      }
+
+      Label #ScoreValue {
+        Style: (FontSize: 18, RenderBold: true, TextColor: #f0f5fb);
+      }
+    }
+
+    Group {
+      Anchor: (Width: 180, Right: 10);
+      Background: (Color: #0b1219(0.75));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label {
+        Text: "Combo";
+        Style: (FontSize: 12, RenderUppercase: true, RenderBold: true, TextColor: #7f8ea0);
+      }
+
+      Label #ComboValue {
+        Style: (FontSize: 18, RenderBold: true, TextColor: #f0f5fb);
+      }
+    }
+
+    Group {
+      FlexWeight: 1;
+      Background: (Color: #0b1219(0.75));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label {
+        Text: "Accuracy";
+        Style: (FontSize: 12, RenderUppercase: true, RenderBold: true, TextColor: #7f8ea0);
+      }
+
+      Label #AccuracyValue {
+        Style: (FontSize: 18, RenderBold: true, TextColor: #f0f5fb);
+      }
+    }
+  }
+
+  Group #Highway {
+    LayoutMode: Left;
+    Anchor: (Height: 520, Bottom: 12);
+
+    Group #Lane1Column {
+      Anchor: (Width: 266, Height: 520, Right: 10);
+      Background: (Color: #10161d(0.92));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label #Lane1Status {
+        Text: "READY";
+        Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
+        Anchor: (Bottom: 8);
+      }
+
+      Label #Lane1Feed {
+        Text: "Next - | Input -";
+        Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #Lane1Track {
+        Anchor: (Height: 388, Bottom: 10);
+        Background: (Color: #0a0f14(0.95));
+        LayoutMode: Top;
+      }
+
+      Group #Lane1ControlRow {
+        Anchor: (Height: 78);
+        LayoutMode: Left;
+      }
+    }
+
+    Group #Lane2Column {
+      Anchor: (Width: 266, Height: 520, Right: 10);
+      Background: (Color: #141b23(0.92));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label #Lane2Status {
+        Text: "READY";
+        Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
+        Anchor: (Bottom: 8);
+      }
+
+      Label #Lane2Feed {
+        Text: "Next - | Input -";
+        Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #Lane2Track {
+        Anchor: (Height: 388, Bottom: 10);
+        Background: (Color: #0a0f14(0.95));
+        LayoutMode: Top;
+      }
+
+      Group #Lane2ControlRow {
+        Anchor: (Height: 78);
+        LayoutMode: Left;
+      }
+    }
+
+    Group #Lane3Column {
+      Anchor: (Width: 266, Height: 520, Right: 10);
+      Background: (Color: #10161d(0.92));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label #Lane3Status {
+        Text: "READY";
+        Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
+        Anchor: (Bottom: 8);
+      }
+
+      Label #Lane3Feed {
+        Text: "Next - | Input -";
+        Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #Lane3Track {
+        Anchor: (Height: 388, Bottom: 10);
+        Background: (Color: #0a0f14(0.95));
+        LayoutMode: Top;
+      }
+
+      Group #Lane3ControlRow {
+        Anchor: (Height: 78);
+        LayoutMode: Left;
+      }
+    }
+
+    Group #Lane4Column {
+      Anchor: (Width: 266, Height: 520);
+      Background: (Color: #141b23(0.92));
+      Padding: (Full: 8);
+      LayoutMode: Top;
+
+      Label #Lane4Status {
+        Text: "READY";
+        Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
+        Anchor: (Bottom: 8);
+      }
+
+      Label #Lane4Feed {
+        Text: "Next - | Input -";
+        Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #Lane4Track {
+        Anchor: (Height: 388, Bottom: 10);
+        Background: (Color: #0a0f14(0.95));
+        LayoutMode: Top;
+      }
+
+      Group #Lane4ControlRow {
+        Anchor: (Height: 78);
+        LayoutMode: Left;
+      }
+    }
+  }
+
+  Group #Footer {
+    LayoutMode: Top;
+
+    Label #JudgmentText {
+      Style: (FontSize: 15, RenderBold: true, TextColor: #f0f5fb);
+      Anchor: (Bottom: 4);
+    }
+
+    Label #DebugText {
+      Style: (FontSize: 12, TextColor: #9ca7b3);
+      Anchor: (Bottom: 10);
+    }
+
+    Group #Controls {
+      LayoutMode: Right;
+
+      TextButton #StopButton {
+        Padding: (Full: 6);
+        Style: $C.@SecondaryTextButtonStyle;
+      }
+
+      TextButton #ExitGameplayButton {
+        Text: "Close";
+        Padding: (Full: 6);
+        Style: $C.@DefaultTextButtonStyle;
+      }
+    }
+  }
+}

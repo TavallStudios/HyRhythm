@@ -1,0 +1,15 @@
+$C = "../Common.ui";
+
+Group #GameplayCaptureRoot {
+  Anchor: (Width: 1120, Height: 760);
+
+  TextField #GameplayKeyCapture {
+    Anchor: (Width: 1120, Height: 760);
+    AutoFocus: true;
+    AutoSelectAll: true;
+    MaxLength: 1;
+    PlaceholderText: "";
+    Background: (Color: #000000(0));
+    Style: (TextColor: #000000(0));
+  }
+}
