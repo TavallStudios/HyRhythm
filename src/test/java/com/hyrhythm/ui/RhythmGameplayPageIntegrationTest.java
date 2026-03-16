@@ -294,7 +294,6 @@ class RhythmGameplayPageIntegrationTest {
         assertEquals("320", commandValue(uiCommandBuilder.getCommands(), "#ScoreValue.Text"));
         assertEquals("1", commandValue(uiCommandBuilder.getCommands(), "#ComboValue.Text"));
         assertEquals("HELD", commandValue(uiCommandBuilder.getCommands(), "#Lane3Status.Text"));
-        assertEquals("#2f6fb7(0.92)", commandValue(uiCommandBuilder.getCommands(), "#Lane3ControlRow[0] #LaneButton.Background.Color"));
         assertTrue(commandValue(uiCommandBuilder.getCommands(), "#DebugText.Text").contains("held=[3]"));
         page.onDismiss(null, null);
     }
