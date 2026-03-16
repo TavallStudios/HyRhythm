@@ -317,6 +317,22 @@ class RhythmGameplayPageIntegrationTest {
         page.onDismiss(null, null);
     }
 
+    @Test
+    void soundEventLookupCandidatesIncludeLegacyAndAssetKeyForms() {
+        assertEquals(
+            java.util.List.of(
+                "hyrhythm/imported/zeratch-tp-na-ame",
+                "zeratch-tp-na-ame",
+                "Zeratch-tp-na-ame"
+            ),
+            RhythmGameplayPage.soundEventLookupCandidates("hyrhythm/imported/zeratch-tp-na-ame")
+        );
+        assertEquals(
+            java.util.List.of("Port-avenue-odinoko-ily-frenchcore-remix"),
+            RhythmGameplayPage.soundEventLookupCandidates("Port-avenue-odinoko-ily-frenchcore-remix")
+        );
+    }
+
     private static boolean containsSelector(CustomUICommand[] commands, String selectorFragment) {
         for (CustomUICommand command : commands) {
             if (command != null && command.selector != null && command.selector.contains(selectorFragment)) {
