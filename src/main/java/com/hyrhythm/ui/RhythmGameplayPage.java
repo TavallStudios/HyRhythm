@@ -32,6 +32,7 @@ import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +53,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     private static final String LANE_TAP_ACTION = "LaneTap";
     private static final long DEFAULT_REFRESH_INTERVAL_MS = 16L;
     private static final String REFRESH_INTERVAL_ENV = "HYRHYTHM_GAMEPLAY_UI_REFRESH_INTERVAL_MS";
+    private static final int UNKNOWN_SOUND_EVENT_INDEX = Integer.MIN_VALUE;
     private static final long TRACK_WINDOW_AHEAD_MS = 3000L;
     private static final long TRACK_LATE_GRACE_MS = 200L;
     private static final int TRACK_HEIGHT_PX = 408;
@@ -746,21 +748,91 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         if (playerRef == null || soundEventId == null) {
             return;
         }
-        int soundEventIndex = SoundEvent.getAssetMap().getIndex(soundEventId);
-        if (soundEventIndex == 0) {
-            loggingService.debug(
+        String resolvedSoundEventId = null;
+        int resolvedSoundEventIndex = UNKNOWN_SOUND_EVENT_INDEX;
+        SoundEvent resolvedSoundEvent = null;
+        List<String> lookupCandidates = soundEventLookupCandidates(soundEventId);
+        StringBuilder lookupSummary = new StringBuilder();
+        for (String candidate : lookupCandidates) {
+            SoundEvent candidateAsset = SoundEvent.getAssetMap().getAsset(candidate);
+            int candidateIndex = SoundEvent.getAssetMap().getIndex(candidate);
+            if (lookupSummary.length() > 0) {
+                lookupSummary.append(" | ");
+            }
+            lookupSummary.append(candidate)
+                .append(":index=")
+                .append(candidateIndex)
+                .append(":present=")
+                .append(candidateAsset != null);
+            if (resolvedSoundEvent == null && isValidSoundEventIndex(candidateIndex) && candidateAsset != null) {
+                resolvedSoundEventId = candidate;
+                resolvedSoundEventIndex = candidateIndex;
+                resolvedSoundEvent = candidateAsset;
+            }
+        }
+        loggingService.info(
+            "audio",
+            "gameplay_chart_audio_lookup",
+            extend(
+                baseFields(),
+                "requestedSoundEventId", soundEventId,
+                "lookupCandidates", String.join(" | ", lookupCandidates),
+                "lookupSummary", lookupSummary.toString(),
+                "resolvedSoundEventId", resolvedSoundEventId == null ? "missing" : resolvedSoundEventId,
+                "resolvedSoundEventIndex", resolvedSoundEventIndex
+            )
+        );
+        if (!isValidSoundEventIndex(resolvedSoundEventIndex) || resolvedSoundEvent == null) {
+            loggingService.warn(
                 "audio",
-                "gameplay_chart_audio_missing",
-                extend(baseFields(), "soundEventId", soundEventId)
+                "gameplay_chart_audio_lookup_failed",
+                extend(baseFields(), "requestedSoundEventId", soundEventId, "lookupSummary", lookupSummary.toString())
             );
             return;
         }
-        SoundUtil.playSoundEvent2dToPlayer(playerRef, soundEventIndex, SoundCategory.Music);
+        SoundUtil.playSoundEvent2dToPlayer(playerRef, resolvedSoundEventIndex, SoundCategory.Music);
         loggingService.info(
             "audio",
             "gameplay_chart_audio_started",
-            extend(baseFields(), "soundEventId", soundEventId, "soundEventIndex", soundEventIndex)
+            extend(
+                baseFields(),
+                "requestedSoundEventId", soundEventId,
+                "resolvedSoundEventId", resolvedSoundEventId,
+                "soundEventIndex", resolvedSoundEventIndex,
+                "audioCategoryId", resolvedSoundEvent.getAudioCategoryId(),
+                "audioCategoryIndex", resolvedSoundEvent.getAudioCategoryIndex(),
+                "layerCount", resolvedSoundEvent.getLayers() == null ? 0 : resolvedSoundEvent.getLayers().length
+            )
         );
+    }
+
+    static List<String> soundEventLookupCandidates(String requestedSoundEventId) {
+        if (requestedSoundEventId == null || requestedSoundEventId.isBlank()) {
+            return List.of();
+        }
+        String trimmedId = requestedSoundEventId.trim();
+        LinkedHashSet<String> candidates = new LinkedHashSet<>();
+        candidates.add(trimmedId);
+        String bareId = trimmedId;
+        int lastSlash = trimmedId.lastIndexOf('/');
+        if (lastSlash >= 0 && lastSlash + 1 < trimmedId.length()) {
+            bareId = trimmedId.substring(lastSlash + 1);
+            candidates.add(bareId);
+        }
+        candidates.add(assetKeyCandidate(bareId));
+        return List.copyOf(candidates);
+    }
+
+    private static String assetKeyCandidate(String rawId) {
+        if (rawId == null || rawId.isBlank()) {
+            return "Unknown";
+        }
+        String trimmedId = rawId.trim();
+        return Character.toUpperCase(trimmedId.charAt(0)) + trimmedId.substring(1);
+    }
+
+    private static boolean isValidSoundEventIndex(int soundEventIndex) {
+        return soundEventIndex != SoundEvent.EMPTY_ID && soundEventIndex != UNKNOWN_SOUND_EVENT_INDEX;
     }
 
     public static final class RawEventData {
