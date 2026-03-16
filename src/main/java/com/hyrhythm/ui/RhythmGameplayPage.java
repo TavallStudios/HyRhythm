@@ -360,10 +360,6 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
 
     private void applyLaneState(UICommandBuilder uiCommandBuilder, int lane, boolean held) {
         uiCommandBuilder.set(
-            laneButtonSelector(lane) + ".Background.Color",
-            held ? "#2f6fb7(0.92)" : "#0c1117(0.85)"
-        );
-        uiCommandBuilder.set(
             laneStatusSelector(lane),
             held ? "HELD" : "READY"
         );
