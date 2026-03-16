@@ -74,6 +74,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     private final String soundEventId;
 
     private final AtomicBoolean refreshStarted = new AtomicBoolean(false);
+    private final AtomicBoolean audioStarted = new AtomicBoolean(false);
 
     private volatile ScheduledFuture<?> refreshFuture;
     private volatile RhythmGameplaySnapshot lastSnapshot;
@@ -126,10 +127,11 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         Store<EntityStore> entityStore
     ) {
         dismissed = false;
+        RhythmGameplaySnapshot snapshot = currentSnapshot();
         uiCommandBuilder.append(PAGE_DOCUMENT);
         buildLaneHud(uiCommandBuilder);
         buildBindings(uiEventBuilder);
-        applySnapshot(uiCommandBuilder, currentSnapshot());
+        applySnapshot(uiCommandBuilder, snapshot);
         RhythmCustomUiCommandValidator.validate(uiCommandBuilder, uiEventBuilder);
         RhythmCustomUiDebugTracer.tracePayload(
             loggingService,
@@ -140,7 +142,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             uiEventBuilder
         );
         startRefreshLoop();
-        playChartAudio();
+        playChartAudio(snapshot);
         loggingService.info("ui", "gameplay_ui_built", baseFields());
     }
 
@@ -744,10 +746,11 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         return "Lane " + lane + "  [" + settings.laneKeys().keyForLane(lane) + "]";
     }
 
-    private void playChartAudio() {
-        if (playerRef == null || soundEventId == null) {
+    private void playChartAudio(RhythmGameplaySnapshot snapshot) {
+        if (playerRef == null || soundEventId == null || !audioStarted.compareAndSet(false, true)) {
             return;
         }
+        long songTimeAtAudioStart = snapshot == null ? 0L : Math.max(0L, snapshot.songTimeMillis());
         String resolvedSoundEventId = null;
         int resolvedSoundEventIndex = UNKNOWN_SOUND_EVENT_INDEX;
         SoundEvent resolvedSoundEvent = null;
@@ -778,6 +781,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
                 "requestedSoundEventId", soundEventId,
                 "lookupCandidates", String.join(" | ", lookupCandidates),
                 "lookupSummary", lookupSummary.toString(),
+                "songTimeAtAudioStartMs", songTimeAtAudioStart,
                 "resolvedSoundEventId", resolvedSoundEventId == null ? "missing" : resolvedSoundEventId,
                 "resolvedSoundEventIndex", resolvedSoundEventIndex
             )
@@ -786,7 +790,12 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             loggingService.warn(
                 "audio",
                 "gameplay_chart_audio_lookup_failed",
-                extend(baseFields(), "requestedSoundEventId", soundEventId, "lookupSummary", lookupSummary.toString())
+                extend(
+                    baseFields(),
+                    "requestedSoundEventId", soundEventId,
+                    "lookupSummary", lookupSummary.toString(),
+                    "songTimeAtAudioStartMs", songTimeAtAudioStart
+                )
             );
             return;
         }
@@ -799,6 +808,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
                 "requestedSoundEventId", soundEventId,
                 "resolvedSoundEventId", resolvedSoundEventId,
                 "soundEventIndex", resolvedSoundEventIndex,
+                "songTimeAtAudioStartMs", songTimeAtAudioStart,
                 "audioCategoryId", resolvedSoundEvent.getAudioCategoryId(),
                 "audioCategoryIndex", resolvedSoundEvent.getAudioCategoryIndex(),
                 "layerCount", resolvedSoundEvent.getLayers() == null ? 0 : resolvedSoundEvent.getLayers().length
