@@ -33,7 +33,7 @@ class RhythmCustomUiCommandValidatorTest {
         UICommandBuilder uiCommandBuilder = new UICommandBuilder();
         uiCommandBuilder.appendInline(
             "#Lane4TrackSurface",
-            "Group #GameplayNote_lane4_note_1 { Visible: false; }"
+            "Group #GameplayNoteLane4Note1 { Visible: false; }"
         );
 
         assertThrows(IllegalStateException.class, () -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
