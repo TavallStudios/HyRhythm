@@ -6,6 +6,7 @@ import com.hyrhythm.content.interfaces.RhythmSongLibraryService;
 import com.hyrhythm.content.model.RhythmChart;
 import com.hyrhythm.dependency.DependencyLoader;
 import com.hyrhythm.gameplay.interfaces.RhythmGameplayService;
+import com.hyrhythm.gameplay.model.RhythmGameplaySnapshot;
 import com.hyrhythm.gameplay.model.RhythmLaneInputAction;
 import com.hyrhythm.session.interfaces.RhythmSessionService;
 import com.hyrhythm.session.model.RhythmSessionPhase;
@@ -299,6 +300,93 @@ class RhythmGameplayPageIntegrationTest {
     }
 
     @Test
+    void gameplayPageBuildPreloadsEntireChartBeforeSongStart() {
+        RhythmSessionSnapshot startedSession = startDebugSession();
+        RhythmChart chart = chart();
+        RhythmGameplayPage page = createPage(startedSession, chart);
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        UIEventBuilder uiEventBuilder = new UIEventBuilder();
+
+        page.build(null, uiCommandBuilder, uiEventBuilder, null);
+
+        assertEquals(chart.notes().size(), countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
+        assertEquals(chart.notes().size(), countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, "#GameplayNote_"));
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Clear, "#Lane"));
+        assertTrue(containsSelector(uiCommandBuilder.getCommands(), "#Lane1TrackSurface"));
+        assertTrue(containsSelector(uiCommandBuilder.getCommands(), "#Lane4TrackSurface"));
+        assertTrue(containsCommandText(uiCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteLeft.ui"));
+        assertTrue(containsCommandText(uiCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteDown.ui"));
+        assertTrue(containsCommandText(uiCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteUp.ui"));
+        assertTrue(containsCommandText(uiCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteRight.ui"));
+        assertTrue(containsCommandText(uiCommandBuilder.getCommands(), "Pages/RhythmGameplayHoldNote"));
+        String debugText = commandValue(uiCommandBuilder.getCommands(), "#DebugText.Text");
+        assertTrue(debugText.contains("preload[chart=debug/test-4k"));
+        assertTrue(debugText.contains("notes=23"));
+        assertTrue(debugText.contains("holds=1"));
+        assertTrue(debugText.contains("mode=full_chart"));
+        assertTrue(debugText.contains("complete=true"));
+        assertTrue(debugText.contains("blocked=false"));
+        assertTrue(debugText.contains("liveAppend=0"));
+        page.onDismiss(null, null);
+    }
+
+    @Test
+    void gameplayPageBuildAppendsGameplayPageBeforeTrackSurfacePreloads() {
+        RhythmSessionSnapshot startedSession = startDebugSession();
+        RhythmGameplayPage page = createPage(startedSession);
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        UIEventBuilder uiEventBuilder = new UIEventBuilder();
+
+        page.build(null, uiCommandBuilder, uiEventBuilder, null);
+
+        CustomUICommand[] commands = uiCommandBuilder.getCommands();
+        int gameplayPageAppendIndex = firstCommandIndex(
+            commands,
+            CustomUICommandType.Append,
+            "",
+            "Pages/RhythmGameplayPage.ui"
+        );
+        int trackSurfacePreloadIndex = firstCommandIndex(
+            commands,
+            CustomUICommandType.AppendInline,
+            "TrackSurface",
+            "Group #GameplayNote_"
+        );
+        int noteContentAppendIndex = firstCommandIndex(
+            commands,
+            CustomUICommandType.Append,
+            "#GameplayNote_",
+            "Pages/RhythmGameplayTapNote"
+        );
+
+        assertTrue(gameplayPageAppendIndex >= 0, "Missing gameplay page append command.");
+        assertTrue(trackSurfacePreloadIndex > gameplayPageAppendIndex, "Track-surface preload ran before the gameplay page append.");
+        assertTrue(noteContentAppendIndex > trackSurfacePreloadIndex, "Note content append ran before its stable host append.");
+        page.onDismiss(null, null);
+    }
+
+    @Test
+    void gameplayPageSnapshotUpdatesDoNotLiveAppendNotesDuringPlay() {
+        RhythmSessionSnapshot startedSession = startDebugSession();
+        RhythmGameplayPage page = createPage(startedSession);
+        buildPage(page);
+
+        RhythmGameplaySnapshot advancedSnapshot = gameplayService.advanceGameplay(PLAYER_ID, "UiPlayer", 1000L);
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+
+        page.applySnapshot(uiCommandBuilder, advancedSnapshot);
+
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, ""));
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.AppendInline, ""));
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Clear, ""));
+        assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Visible") > 0);
+        assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Anchor") > 0);
+        assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "TrackSurface["));
+        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "#GameplayNote_") > 0);
+        page.onDismiss(null, null);
+    }
+
+    @Test
     void stopRequestEndsSessionAndRendersCompletedGameplayState() {
         RhythmSessionSnapshot startedSession = startDebugSession();
         RhythmGameplayPage page = createPage(startedSession);
@@ -382,15 +470,82 @@ class RhythmGameplayPageIntegrationTest {
     }
 
     private static CustomUICommand findCommand(CustomUICommand[] commands, String selector) {
+        CustomUICommand matchingCommand = null;
         for (CustomUICommand command : commands) {
             if (command == null) {
                 continue;
             }
             if (command.type == CustomUICommandType.Set && selector.equals(command.selector)) {
-                return command;
+                matchingCommand = command;
             }
         }
-        return null;
+        return matchingCommand;
+    }
+
+    private static long countCommands(CustomUICommand[] commands, CustomUICommandType type, String selectorFragment) {
+        long count = 0L;
+        for (CustomUICommand command : commands) {
+            if (command == null || command.type != type) {
+                continue;
+            }
+            String selector = command.selector == null ? "" : command.selector;
+            if (!selector.contains(selectorFragment)) {
+                continue;
+            }
+            count++;
+        }
+        return count;
+    }
+
+    private static long countSelectors(CustomUICommand[] commands, String selectorFragment) {
+        long count = 0L;
+        for (CustomUICommand command : commands) {
+            if (command == null || command.selector == null) {
+                continue;
+            }
+            if (command.selector.contains(selectorFragment)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private static int firstCommandIndex(
+        CustomUICommand[] commands,
+        CustomUICommandType type,
+        String selectorFragment,
+        String payloadFragment
+    ) {
+        for (int index = 0; index < commands.length; index++) {
+            CustomUICommand command = commands[index];
+            if (command == null || command.type != type) {
+                continue;
+            }
+            String selector = command.selector == null ? "" : command.selector;
+            if (!selector.contains(selectorFragment)) {
+                continue;
+            }
+            String payload = command.text != null && !command.text.isBlank()
+                ? command.text
+                : command.data == null ? "" : command.data;
+            if (!payload.contains(payloadFragment)) {
+                continue;
+            }
+            return index;
+        }
+        return -1;
+    }
+
+    private static boolean containsCommandText(CustomUICommand[] commands, String textFragment) {
+        for (CustomUICommand command : commands) {
+            if (command == null) {
+                continue;
+            }
+            if (command.text != null && command.text.contains(textFragment)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void assertBinding(CustomUIEventBinding[] eventBindings, CustomUIEventBindingType type, String selector) {

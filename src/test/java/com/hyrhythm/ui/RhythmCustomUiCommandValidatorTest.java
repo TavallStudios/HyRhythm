@@ -22,10 +22,40 @@ class RhythmCustomUiCommandValidatorTest {
         UICommandBuilder uiCommandBuilder = new UICommandBuilder();
         uiCommandBuilder.appendInline(
             "#Lane1Track",
-            "Group { Sprite { TexturePath: \"RhythmGameplayArrow.png\"; } }"
+            "Group { Sprite { TexturePath: \"RhythmGameplayNoteLeft.png\"; } }"
         );
 
         assertDoesNotThrow(() -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
+    }
+
+    @Test
+    void allowsInlineGameplayTrackSurfaceHostsWithStableSelectors() {
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        uiCommandBuilder.appendInline(
+            "#Lane4TrackSurface",
+            "Group #GameplayNote_lane4_note_1 { Visible: false; }"
+        );
+
+        assertDoesNotThrow(() -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
+    }
+
+    @Test
+    void rejectsInlineGameplayTrackSurfacePreloadsWithoutStableNoteId() {
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        uiCommandBuilder.appendInline(
+            "#Lane4TrackSurface",
+            "Group { Label { Text: \"probe\"; } }"
+        );
+
+        assertThrows(IllegalStateException.class, () -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
+    }
+
+    @Test
+    void rejectsIndexedTrackSurfaceGameplayNoteSelectors() {
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        uiCommandBuilder.set("#Lane4TrackSurface[0] #GameplayNoteRoot.Visible", true);
+
+        assertThrows(IllegalStateException.class, () -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
     }
 
     @Test

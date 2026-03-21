@@ -1,0 +1,17 @@
+$C = "../Common.ui";
+
+Group {
+  Anchor: (Full: 0);
+  Background: (Color: #f2c14a(0.35));
+
+  Sprite #GameplayNoteImage {
+    Anchor: (Width: 28, Height: 28, Left: 6, Top: 2);
+    TexturePath: "RhythmGameplayNoteRight.png";
+  }
+
+  Label #GameplayNoteLabel {
+    Text: "Hold";
+    Style: (FontSize: 11, TextColor: #d9e4ef, VerticalAlignment: Center, HorizontalAlignment: End);
+    Padding: (Right: 8, Left: 40);
+  }
+}
