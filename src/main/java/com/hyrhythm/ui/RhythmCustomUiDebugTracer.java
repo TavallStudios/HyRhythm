@@ -33,11 +33,13 @@ final class RhythmCustomUiDebugTracer {
         UICommandBuilder uiCommandBuilder,
         UIEventBuilder uiEventBuilder
     ) {
-        if (loggingService == null || uiCommandBuilder == null || uiEventBuilder == null) {
+        if (loggingService == null || uiCommandBuilder == null) {
             return;
         }
         CustomUICommand[] commands = uiCommandBuilder.getCommands();
-        CustomUIEventBinding[] eventBindings = uiEventBuilder.getEvents();
+        CustomUIEventBinding[] eventBindings = uiEventBuilder == null
+            ? UIEventBuilder.EMPTY_EVENT_BINDING_ARRAY
+            : uiEventBuilder.getEvents();
         loggingService.debug(
             "ui",
             event,

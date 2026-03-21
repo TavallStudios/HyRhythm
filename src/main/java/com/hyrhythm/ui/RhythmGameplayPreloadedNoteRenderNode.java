@@ -8,10 +8,9 @@ final class RhythmGameplayPreloadedNoteRenderNode {
     final RhythmGameplayLaneDirection laneDirection;
     final boolean hold;
     final int noteHeight;
-    final String hostSelector;
-    final String rootId;
-    final String rootSelector;
-    final String hostDocument;
+    final String laneSurfaceSelector;
+    final int laneSurfaceChildIndex;
+    final String noteRootSelector;
     final String contentDocumentPath;
 
     boolean preloadQueued;
@@ -25,9 +24,9 @@ final class RhythmGameplayPreloadedNoteRenderNode {
         RhythmGameplayLaneDirection laneDirection,
         boolean hold,
         int noteHeight,
-        String hostSelector,
-        String rootId,
-        String hostDocument,
+        String laneSurfaceSelector,
+        int laneSurfaceChildIndex,
+        String noteRootSelector,
         String contentDocumentPath
     ) {
         this.noteId = Objects.requireNonNull(noteId, "noteId");
@@ -35,10 +34,9 @@ final class RhythmGameplayPreloadedNoteRenderNode {
         this.laneDirection = Objects.requireNonNull(laneDirection, "laneDirection");
         this.hold = hold;
         this.noteHeight = noteHeight;
-        this.hostSelector = Objects.requireNonNull(hostSelector, "hostSelector");
-        this.rootId = Objects.requireNonNull(rootId, "rootId");
-        this.rootSelector = "#" + this.rootId;
-        this.hostDocument = Objects.requireNonNull(hostDocument, "hostDocument");
+        this.laneSurfaceSelector = Objects.requireNonNull(laneSurfaceSelector, "laneSurfaceSelector");
+        this.laneSurfaceChildIndex = laneSurfaceChildIndex;
+        this.noteRootSelector = Objects.requireNonNull(noteRootSelector, "noteRootSelector");
         this.contentDocumentPath = Objects.requireNonNull(contentDocumentPath, "contentDocumentPath");
     }
 
