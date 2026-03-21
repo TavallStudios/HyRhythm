@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RhythmChartUiDocumentGeneratorTest {
@@ -34,6 +35,8 @@ class RhythmChartUiDocumentGeneratorTest {
         assertTrue(document.contains("Group #GameplayChartLane4"));
         assertTrue(document.contains("#" + RhythmGameplayUiSelectors.gameplayNoteRootId(RhythmGameplayLaneDirection.LEFT, "lane-1.note")));
         assertTrue(document.contains("#" + RhythmGameplayUiSelectors.gameplayNoteRootId(RhythmGameplayLaneDirection.RIGHT, "lane-4-hold")));
+        assertTrue(document.contains("#GameplayNoteLeftLane1Note"));
+        assertFalse(document.contains("#GameplayNote_left_note_1"));
         assertTrue(document.contains("TexturePath: \"../Pages/RhythmGameplayNoteLeft.png\";"));
         assertTrue(document.contains("TexturePath: \"../Pages/RhythmGameplayNoteRight.png\";"));
         assertTrue(document.contains("Visible: false;"));

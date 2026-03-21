@@ -367,7 +367,7 @@ class RhythmGameplayPageIntegrationTest {
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Visible") > 0);
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Anchor") > 0);
         assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "TrackSurface["));
-        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "#GameplayNote_") > 0);
+        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "#GameplayNote") > 0);
         page.onDismiss(null, null);
     }
 
