@@ -1,0 +1,40 @@
+$C = "../Common.ui";
+
+@LaneButtonStyle = (
+  Default: (
+    Background: #10161d(0.82),
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #f5f9ff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  ),
+  Hovered: (
+    Background: #ffffff(0.04),
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #f5f9ff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  ),
+  Pressed: (
+    Background: #ffffff(0.10),
+    LabelStyle: (FontSize: 18, RenderBold: true, TextColor: #ffffff, HorizontalAlignment: Center, VerticalAlignment: Center)
+  )
+);
+
+Group {
+  Anchor: (Width: 250, Height: 68);
+
+  Group #LaneReceptor {
+    Anchor: (Left: 8, Vertical: 0, Width: 52, Height: 52);
+
+    Sprite #LaneIdleReceptor {
+      Anchor: (Full: 0);
+      TexturePath: "RhythmGameplayReceptorUpIdle.png";
+    }
+
+    Sprite #LaneHitReceptor {
+      Visible: false;
+      Anchor: (Full: 0);
+      TexturePath: "RhythmGameplayReceptorUpHit.png";
+    }
+  }
+
+  TextButton #LaneButton {
+    Anchor: (Left: 64, Right: 0, Top: 0, Bottom: 0);
+    Style: @LaneButtonStyle;
+  }
+}
