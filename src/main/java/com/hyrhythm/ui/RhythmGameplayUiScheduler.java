@@ -25,6 +25,11 @@ public final class RhythmGameplayUiScheduler implements AutoCloseable {
         return executor.scheduleAtFixedRate(runnable, initialDelayMs, periodMs, TimeUnit.MILLISECONDS);
     }
 
+    public ScheduledFuture<?> schedule(Runnable runnable, long delayMs) {
+        Objects.requireNonNull(runnable, "runnable");
+        return executor.schedule(runnable, delayMs, TimeUnit.MILLISECONDS);
+    }
+
     @Override
     public void close() {
         executor.shutdownNow();

@@ -55,6 +55,8 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     private static final String GAMEPLAY_NOTE_ROOT_ID_PREFIX = "GameplayNote_";
     private static final String LANE_TAP_ACTION = "LaneTap";
     private static final long DEFAULT_REFRESH_INTERVAL_MS = 16L;
+    private static final long DEFERRED_PRELOAD_DELAY_MS = 50L;
+    private static final long DEFERRED_SNAPSHOT_SYNC_DELAY_MS = 50L;
     private static final String REFRESH_INTERVAL_ENV = "HYRHYTHM_GAMEPLAY_UI_REFRESH_INTERVAL_MS";
     private static final int UNKNOWN_SOUND_EVENT_INDEX = Integer.MIN_VALUE;
     private static final long TRACK_WINDOW_AHEAD_MS = 3000L;
@@ -82,8 +84,11 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
 
     private final AtomicBoolean refreshStarted = new AtomicBoolean(false);
     private final AtomicBoolean audioStarted = new AtomicBoolean(false);
+    private final AtomicBoolean deferredPreloadScheduled = new AtomicBoolean(false);
 
     private volatile ScheduledFuture<?> refreshFuture;
+    private volatile ScheduledFuture<?> deferredPreloadFuture;
+    private volatile ScheduledFuture<?> deferredSnapshotSyncFuture;
     private volatile RhythmGameplaySnapshot lastSnapshot;
     private volatile long baselineEpochMillis;
     private volatile boolean dismissed;
@@ -94,6 +99,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     private volatile String preloadMode;
     private volatile boolean songStartBlockedWaitingForPreload;
     private volatile int runtimeLiveAppendCount;
+    private volatile boolean runtimeNoteSelectorsReady;
 
     private final Map<Integer, String> laneInputFeedByLane = new ConcurrentHashMap<>();
 
@@ -138,6 +144,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         this.preloadMode = "pending";
         this.songStartBlockedWaitingForPreload = false;
         this.runtimeLiveAppendCount = 0;
+        this.runtimeNoteSelectorsReady = false;
     }
 
     @Override
@@ -152,7 +159,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         uiCommandBuilder.append(PAGE_DOCUMENT);
         buildLaneHud(uiCommandBuilder);
         buildBindings(uiEventBuilder);
-        populateGameplayUi(uiCommandBuilder, snapshot);
+        buildInitialGameplayShell(uiCommandBuilder, snapshot);
         RhythmCustomUiCommandValidator.validate(uiCommandBuilder, uiEventBuilder);
         RhythmCustomUiDebugTracer.tracePayload(
             loggingService,
@@ -162,8 +169,8 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             uiCommandBuilder,
             uiEventBuilder
         );
+        queueDeferredGameplayPreload();
         startRefreshLoop();
-        playChartAudio(snapshot);
         loggingService.info(
             "ui",
             "gameplay_ui_built",
@@ -212,7 +219,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     @Override
     public void onDismiss(Ref<EntityStore> entityRef, Store<EntityStore> entityStore) {
         dismissed = true;
-        stopRefreshLoop();
+        cancelScheduledTasks();
         loggingService.info("ui", "gameplay_ui_closed", baseFields());
     }
 
@@ -221,7 +228,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             case "STOP" -> {
                 sessionService.stopSession(playerId, playerName, "ui_stop");
                 lastSnapshot = gameplayService.getLastGameplay(playerId).orElse(lastSnapshot);
-                stopRefreshLoop();
+                cancelScheduledTasks();
                 loggingService.info("ui", "gameplay_stop_requested", baseFields());
                 sendPlayerMessage(entityStore, "Stopped rhythm session " + sessionId + ".", "yellow");
                 pushSnapshotUpdate(currentSnapshot(), false);
@@ -266,13 +273,42 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         );
     }
 
-    private void populateGameplayUi(UICommandBuilder uiCommandBuilder, RhythmGameplaySnapshot snapshot) {
+    private void buildInitialGameplayShell(UICommandBuilder uiCommandBuilder, RhythmGameplaySnapshot snapshot) {
+        cancelDeferredGameplayTasks();
+        songStartBlockedWaitingForPreload = true;
+        preloadComplete = false;
+        preloadDurationMillis = 0L;
+        preloadMode = "deferred_page_open";
+        runtimeLiveAppendCount = 0;
+        runtimeNoteSelectorsReady = false;
+        resetPreloadedNoteRenderState();
+        applySnapshot(uiCommandBuilder, snapshot);
+        loggingService.info(
+            "ui",
+            "gameplay_ui_population_deferred",
+            extend(
+                baseFields(),
+                "selectedChartId", chart.chartId(),
+                "totalNotes", totalPreloadedNoteCount,
+                "noteCountPerLane", noteCountByLane,
+                "holdNoteCount", holdNoteCount,
+                "preloadMode", preloadMode,
+                "songStartBlockedWaitingForPreload", true,
+                "deferredPreloadDelayMs", deferredPreloadDelayMs()
+            )
+        );
+    }
+
+    void preloadGameplayRuntimeUi(UICommandBuilder uiCommandBuilder) {
+        if (runtimeNoteSelectorsReady) {
+            return;
+        }
+
         long preloadStartedAtNanos = System.nanoTime();
         songStartBlockedWaitingForPreload = true;
         preloadComplete = false;
         preloadMode = "pending";
         runtimeLiveAppendCount = 0;
-        resetPreloadedNoteRenderState();
         loggingService.info(
             "ui",
             "gameplay_ui_population_started",
@@ -289,7 +325,6 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
 
         try {
             preloadChartNotes(uiCommandBuilder);
-            applySnapshot(uiCommandBuilder, snapshot);
         } catch (RuntimeException exception) {
             preloadDurationMillis = elapsedMillis(preloadStartedAtNanos);
             preloadMode = "failed";
@@ -315,9 +350,9 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         preloadDurationMillis = elapsedMillis(preloadStartedAtNanos);
         preloadMode = "full_chart";
         preloadComplete = true;
-        resetBaselineEpoch(snapshot);
+        runtimeNoteSelectorsReady = true;
+        resetBaselineEpoch(currentSnapshot());
         songStartBlockedWaitingForPreload = false;
-        applySnapshot(uiCommandBuilder, snapshot);
         loggingService.info(
             "ui",
             "gameplay_ui_population_completed",
@@ -405,6 +440,44 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         return completedSnapshot;
     }
 
+    private void queueDeferredGameplayPreload() {
+        if (!deferredPreloadScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        deferredPreloadFuture = uiScheduler.schedule(this::dispatchDeferredGameplayPreload, deferredPreloadDelayMs());
+    }
+
+    private void dispatchDeferredGameplayPreload() {
+        if (dismissed || playerRef == null) {
+            return;
+        }
+
+        UICommandBuilder uiCommandBuilder = new UICommandBuilder();
+        preloadGameplayRuntimeUi(uiCommandBuilder);
+        RhythmCustomUiCommandValidator.validate(uiCommandBuilder, new UIEventBuilder());
+        RhythmCustomUiDebugTracer.tracePayload(
+            loggingService,
+            "gameplay_ui_payload_preloaded",
+            getClass().getName(),
+            baseFields(),
+            uiCommandBuilder,
+            null
+        );
+        sendUpdate(uiCommandBuilder, false);
+        playChartAudio(currentSnapshot());
+        if (refreshIntervalMs <= 0L) {
+            queueDeferredSnapshotSync();
+        }
+    }
+
+    private void queueDeferredSnapshotSync() {
+        deferredSnapshotSyncFuture = uiScheduler.schedule(this::dispatchDeferredSnapshotSync, deferredSnapshotSyncDelayMs());
+    }
+
+    private void dispatchDeferredSnapshotSync() {
+        pushSnapshotUpdate(currentSnapshot(), false);
+    }
+
     private void pushSnapshotUpdate(RhythmGameplaySnapshot snapshot, boolean clearCaptureValue) {
         if (dismissed || playerRef == null) {
             return;
@@ -462,7 +535,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         }
 
         if (latestSnapshot != null && latestSnapshot.completed()) {
-            stopRefreshLoop();
+            cancelScheduledTasks();
         }
     }
 
@@ -525,6 +598,9 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         RhythmGameplaySnapshot snapshot,
         long songTimeMillis
     ) {
+        if (!runtimeNoteSelectorsReady) {
+            return;
+        }
         synchronized (noteRenderStateLock) {
             if (snapshot == null) {
                 for (RhythmGameplayPreloadedNoteRenderNode renderNode : preloadedNotesById.values()) {
@@ -675,6 +751,18 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         return Math.max(0L, rawSongTimeMillis + settings.globalOffsetMs());
     }
 
+    private long deferredPreloadDelayMs() {
+        return Math.max(DEFERRED_PRELOAD_DELAY_MS, refreshIntervalMs);
+    }
+
+    private long deferredSnapshotSyncDelayMs() {
+        return Math.max(DEFERRED_SNAPSHOT_SYNC_DELAY_MS, refreshIntervalMs);
+    }
+
+    private long deferredRefreshDelayMs() {
+        return deferredPreloadDelayMs() + deferredSnapshotSyncDelayMs();
+    }
+
     private void startRefreshLoop() {
         if (!refreshStarted.compareAndSet(false, true)) {
             return;
@@ -684,10 +772,11 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             loggingService.info("ui", "gameplay_ui_refresh_disabled", extend(baseFields(), "refreshIntervalMs", refreshIntervalMs));
             return;
         }
-        refreshFuture = uiScheduler.scheduleAtFixedRate(this::refreshFromClock, refreshIntervalMs, refreshIntervalMs);
+        refreshFuture = uiScheduler.scheduleAtFixedRate(this::refreshFromClock, deferredRefreshDelayMs(), refreshIntervalMs);
     }
 
-    private void stopRefreshLoop() {
+    private void cancelScheduledTasks() {
+        cancelDeferredGameplayTasks();
         ScheduledFuture<?> future = refreshFuture;
         refreshFuture = null;
         refreshStarted.set(false);
@@ -696,9 +785,23 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         }
     }
 
+    private void cancelDeferredGameplayTasks() {
+        ScheduledFuture<?> preloadFuture = deferredPreloadFuture;
+        deferredPreloadFuture = null;
+        if (preloadFuture != null) {
+            preloadFuture.cancel(false);
+        }
+        ScheduledFuture<?> snapshotSyncFuture = deferredSnapshotSyncFuture;
+        deferredSnapshotSyncFuture = null;
+        if (snapshotSyncFuture != null) {
+            snapshotSyncFuture.cancel(false);
+        }
+        deferredPreloadScheduled.set(false);
+    }
+
     private void refreshFromClock() {
         if (dismissed) {
-            stopRefreshLoop();
+            cancelScheduledTasks();
             return;
         }
 
@@ -712,7 +815,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             lastSnapshot = snapshot;
             pushSnapshotUpdate(snapshot, false);
             if (snapshot.completed()) {
-                stopRefreshLoop();
+                cancelScheduledTasks();
             }
         } catch (IllegalStateException exception) {
             loggingService.warn(
@@ -720,7 +823,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
                 "gameplay_refresh_failed",
                 extend(baseFields(), "reason", exception.getMessage())
             );
-            stopRefreshLoop();
+            cancelScheduledTasks();
         }
     }
 
