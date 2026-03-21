@@ -101,31 +101,27 @@ $C.@Container #GameplayRoot {
   }
 
   Group #Highway {
-    LayoutMode: Left;
     Anchor: (Height: 520, Bottom: 12);
 
     Group #Lane1Column {
-      Anchor: (Width: 266, Height: 520, Right: 10);
+      Anchor: (Left: 0, Top: 0, Width: 266, Height: 520);
       Background: (Color: #10161d(0.92));
-      Padding: (Full: 8);
-      LayoutMode: Top;
 
       Label #Lane1Status {
         Text: "READY";
         Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 8, Height: 14);
       }
 
       Label #Lane1Feed {
         Text: "Next - | Input -";
         Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 28, Height: 14);
       }
 
       Group #Lane1Track {
-        Anchor: (Height: 388, Bottom: 10);
+        Anchor: (Left: 8, Top: 52, Width: 250, Height: 388);
         Background: (Color: #0a0f14(0.95));
-        LayoutMode: Top;
 
         Group #Lane1TrackSurface {
           Anchor: (Full: 0);
@@ -133,33 +129,30 @@ $C.@Container #GameplayRoot {
       }
 
       Group #Lane1ControlRow {
-        Anchor: (Height: 78);
+        Anchor: (Left: 8, Top: 444, Width: 250, Height: 68);
         LayoutMode: Left;
       }
     }
 
     Group #Lane2Column {
-      Anchor: (Width: 266, Height: 520, Right: 10);
+      Anchor: (Left: 276, Top: 0, Width: 266, Height: 520);
       Background: (Color: #141b23(0.92));
-      Padding: (Full: 8);
-      LayoutMode: Top;
 
       Label #Lane2Status {
         Text: "READY";
         Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 8, Height: 14);
       }
 
       Label #Lane2Feed {
         Text: "Next - | Input -";
         Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 28, Height: 14);
       }
 
       Group #Lane2Track {
-        Anchor: (Height: 388, Bottom: 10);
+        Anchor: (Left: 8, Top: 52, Width: 250, Height: 388);
         Background: (Color: #0a0f14(0.95));
-        LayoutMode: Top;
 
         Group #Lane2TrackSurface {
           Anchor: (Full: 0);
@@ -167,33 +160,30 @@ $C.@Container #GameplayRoot {
       }
 
       Group #Lane2ControlRow {
-        Anchor: (Height: 78);
+        Anchor: (Left: 8, Top: 444, Width: 250, Height: 68);
         LayoutMode: Left;
       }
     }
 
     Group #Lane3Column {
-      Anchor: (Width: 266, Height: 520, Right: 10);
+      Anchor: (Left: 552, Top: 0, Width: 266, Height: 520);
       Background: (Color: #10161d(0.92));
-      Padding: (Full: 8);
-      LayoutMode: Top;
 
       Label #Lane3Status {
         Text: "READY";
         Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 8, Height: 14);
       }
 
       Label #Lane3Feed {
         Text: "Next - | Input -";
         Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 28, Height: 14);
       }
 
       Group #Lane3Track {
-        Anchor: (Height: 388, Bottom: 10);
+        Anchor: (Left: 8, Top: 52, Width: 250, Height: 388);
         Background: (Color: #0a0f14(0.95));
-        LayoutMode: Top;
 
         Group #Lane3TrackSurface {
           Anchor: (Full: 0);
@@ -201,33 +191,30 @@ $C.@Container #GameplayRoot {
       }
 
       Group #Lane3ControlRow {
-        Anchor: (Height: 78);
+        Anchor: (Left: 8, Top: 444, Width: 250, Height: 68);
         LayoutMode: Left;
       }
     }
 
     Group #Lane4Column {
-      Anchor: (Width: 266, Height: 520);
+      Anchor: (Left: 828, Top: 0, Width: 266, Height: 520);
       Background: (Color: #141b23(0.92));
-      Padding: (Full: 8);
-      LayoutMode: Top;
 
       Label #Lane4Status {
         Text: "READY";
         Style: (FontSize: 12, RenderBold: true, RenderUppercase: true, HorizontalAlignment: Center, TextColor: #8ca0b4);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 8, Height: 14);
       }
 
       Label #Lane4Feed {
         Text: "Next - | Input -";
         Style: (FontSize: 11, TextColor: #7f8ea0, HorizontalAlignment: Center);
-        Anchor: (Bottom: 8);
+        Anchor: (Left: 8, Right: 8, Top: 28, Height: 14);
       }
 
       Group #Lane4Track {
-        Anchor: (Height: 388, Bottom: 10);
+        Anchor: (Left: 8, Top: 52, Width: 250, Height: 388);
         Background: (Color: #0a0f14(0.95));
-        LayoutMode: Top;
 
         Group #Lane4TrackSurface {
           Anchor: (Full: 0);
@@ -235,9 +222,13 @@ $C.@Container #GameplayRoot {
       }
 
       Group #Lane4ControlRow {
-        Anchor: (Height: 78);
+        Anchor: (Left: 8, Top: 444, Width: 250, Height: 68);
         LayoutMode: Left;
       }
+    }
+
+    Group #GameplayChartHost {
+      Anchor: (Left: 8, Top: 52, Width: 1078, Height: 388);
     }
   }
 
