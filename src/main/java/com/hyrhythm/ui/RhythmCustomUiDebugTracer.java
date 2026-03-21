@@ -65,9 +65,19 @@ final class RhythmCustomUiDebugTracer {
             if (command.text != null && !command.text.isBlank()) {
                 builder.append(" text=").append(command.text);
             }
+            if (command.data != null && !command.data.isBlank()) {
+                builder.append(" data=").append(compactValue(command.data));
+            }
             summary.add(builder.toString());
         }
         return List.copyOf(summary);
+    }
+
+    private static String compactValue(String value) {
+        if (value == null || value.length() <= 160) {
+            return value;
+        }
+        return value.substring(0, 157) + "...";
     }
 
     private static List<String> summarizeEvents(CustomUIEventBinding[] eventBindings) {
