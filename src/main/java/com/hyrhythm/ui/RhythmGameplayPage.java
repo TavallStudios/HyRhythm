@@ -51,8 +51,8 @@ import java.util.regex.Pattern;
 public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGameplayPage.RawEventData> {
     private static final String PAGE_DOCUMENT = "Pages/RhythmGameplayPage.ui";
     private static final String LANE_BUTTON_DOCUMENT = "Pages/RhythmGameplayLaneButton.ui";
+    private static final String NOTE_HOST_DOCUMENT = "Pages/RhythmGameplayNoteHost.ui";
     private static final String CLOSE_BUTTON_SELECTOR = "#ExitGameplayButton";
-    private static final String GAMEPLAY_NOTE_ROOT_ID_PREFIX = "GameplayNote_";
     private static final String LANE_TAP_ACTION = "LaneTap";
     private static final long DEFAULT_REFRESH_INTERVAL_MS = 16L;
     private static final long DEFERRED_PRELOAD_DELAY_MS = 50L;
@@ -393,8 +393,8 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
     private void preloadChartNotes(UICommandBuilder uiCommandBuilder) {
         synchronized (noteRenderStateLock) {
             for (RhythmGameplayPreloadedNoteRenderNode renderNode : preloadedNotesById.values()) {
-                uiCommandBuilder.appendInline(renderNode.hostSelector, renderNode.hostDocument);
-                uiCommandBuilder.append(renderNode.rootSelector, renderNode.contentDocumentPath);
+                uiCommandBuilder.append(renderNode.laneSurfaceSelector, NOTE_HOST_DOCUMENT);
+                uiCommandBuilder.append(renderNode.noteRootSelector, renderNode.contentDocumentPath);
                 renderNode.preloadQueued = true;
             }
         }
@@ -638,8 +638,10 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
                 extend(
                     baseFields(),
                     "noteId", renderNode.noteId,
-                    "noteSelector", renderNode.rootSelector,
+                    "noteSelector", renderNode.noteRootSelector,
                     "lane", renderNode.lane,
+                    "laneSurfaceSelector", renderNode.laneSurfaceSelector,
+                    "laneSurfaceChildIndex", renderNode.laneSurfaceChildIndex,
                     "direction", renderNode.laneDirection.idToken,
                     "songTimeMs", songTimeMillis
                 )
@@ -659,14 +661,14 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
 
         int noteTop = lanePosition(songTimeMillis, noteView, renderNode.noteHeight);
         if (!renderNode.visible) {
-            uiCommandBuilder.set(renderNode.rootSelector + ".Visible", true);
+            uiCommandBuilder.set(renderNode.noteRootSelector + ".Visible", true);
             loggingService.debug(
                 "ui",
                 "gameplay_note_visible",
                 extend(
                     baseFields(),
                     "noteId", renderNode.noteId,
-                    "noteSelector", renderNode.rootSelector,
+                    "noteSelector", renderNode.noteRootSelector,
                     "lane", renderNode.lane,
                     "direction", renderNode.laneDirection.idToken,
                     "songTimeMs", songTimeMillis,
@@ -679,7 +681,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             renderNode.visible = true;
         }
         if (!Objects.equals(renderNode.lastTop, noteTop)) {
-            uiCommandBuilder.setObject(renderNode.rootSelector + ".Anchor", noteAnchor(noteTop, renderNode.noteHeight));
+            uiCommandBuilder.setObject(renderNode.noteRootSelector + ".Anchor", noteAnchor(noteTop, renderNode.noteHeight));
             renderNode.lastTop = noteTop;
         }
     }
@@ -693,7 +695,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         if (renderNode.completed || !renderNode.visible) {
             return;
         }
-        uiCommandBuilder.set(renderNode.rootSelector + ".Visible", false);
+        uiCommandBuilder.set(renderNode.noteRootSelector + ".Visible", false);
         renderNode.visible = false;
         loggingService.debug(
             "ui",
@@ -701,7 +703,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             extend(
                 baseFields(),
                 "noteId", renderNode.noteId,
-                "noteSelector", renderNode.rootSelector,
+                "noteSelector", renderNode.noteRootSelector,
                 "lane", renderNode.lane,
                 "direction", renderNode.laneDirection.idToken,
                 "reason", reason,
@@ -721,7 +723,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             return;
         }
         if (renderNode.visible) {
-            uiCommandBuilder.set(renderNode.rootSelector + ".Visible", false);
+            uiCommandBuilder.set(renderNode.noteRootSelector + ".Visible", false);
         }
         renderNode.completed = true;
         renderNode.visible = false;
@@ -732,7 +734,7 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
             extend(
                 baseFields(),
                 "noteId", renderNode.noteId,
-                "noteSelector", renderNode.rootSelector,
+                "noteSelector", renderNode.noteRootSelector,
                 "lane", renderNode.lane,
                 "direction", renderNode.laneDirection.idToken,
                 "reason", reason,
@@ -1135,18 +1137,24 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
 
     private static Map<String, RhythmGameplayPreloadedNoteRenderNode> buildPreloadedNoteRenderNodes(RhythmChart chart) {
         LinkedHashMap<String, RhythmGameplayPreloadedNoteRenderNode> renderNodesById = new LinkedHashMap<>();
+        LinkedHashMap<Integer, Integer> laneChildCountByLane = new LinkedHashMap<>();
+        for (int lane = 1; lane <= chart.keyMode(); lane++) {
+            laneChildCountByLane.put(lane, 0);
+        }
         for (RhythmNote note : chart.notes()) {
             RhythmGameplayLaneDirection laneDirection = RhythmGameplayLaneDirection.fromLane(note.lane());
-            String rootId = gameplayNoteRootId(laneDirection, note.noteId());
+            int laneSurfaceChildIndex = laneChildCountByLane.getOrDefault(note.lane(), 0);
+            laneChildCountByLane.put(note.lane(), laneSurfaceChildIndex + 1);
+            String laneSurfaceSelector = laneTrackSurfaceSelector(note.lane());
             RhythmGameplayPreloadedNoteRenderNode renderNode = new RhythmGameplayPreloadedNoteRenderNode(
                 note.noteId(),
                 note.lane(),
                 laneDirection,
                 note.hold(),
                 noteHeight(note),
-                laneTrackSurfaceSelector(note.lane()),
-                rootId,
-                noteHostInlineDocument(rootId, noteHeight(note)),
+                laneSurfaceSelector,
+                laneSurfaceChildIndex,
+                laneTrackSurfaceChildSelector(note.lane(), laneSurfaceChildIndex),
                 laneDirection.documentPath(note.hold())
             );
             renderNodesById.put(renderNode.noteId, renderNode);
@@ -1154,26 +1162,8 @@ public final class RhythmGameplayPage extends InteractiveCustomUIPage<RhythmGame
         return Collections.unmodifiableMap(renderNodesById);
     }
 
-    private static String gameplayNoteRootId(RhythmGameplayLaneDirection laneDirection, String noteId) {
-        return GAMEPLAY_NOTE_ROOT_ID_PREFIX
-            + laneDirection.idToken
-            + "_"
-            + sanitizeSelectorToken(noteId);
-    }
-
-    private static String sanitizeSelectorToken(String rawValue) {
-        String sanitizedValue = Objects.requireNonNull(rawValue, "rawValue").replaceAll("[^A-Za-z0-9_]", "_");
-        if (sanitizedValue.isBlank()) {
-            return "unknown_note";
-        }
-        return sanitizedValue;
-    }
-
-    private static String noteHostInlineDocument(String rootId, int noteHeight) {
-        return "Group #" + rootId
-            + " { Visible: false; Anchor: (Left: 0, Right: 0, Top: 0, Height: "
-            + noteHeight
-            + "); }";
+    private static String laneTrackSurfaceChildSelector(int lane, int childIndex) {
+        return laneTrackSurfaceSelector(lane) + "[" + childIndex + "]";
     }
 
     private void playChartAudio(RhythmGameplaySnapshot snapshot) {

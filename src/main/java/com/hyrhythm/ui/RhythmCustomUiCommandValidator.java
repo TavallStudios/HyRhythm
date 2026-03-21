@@ -44,7 +44,7 @@ final class RhythmCustomUiCommandValidator {
                 continue;
             }
             validateSelector(command.selector);
-            validateCommandCompatibility(command.type, command.selector, command.text);
+            validateCommandCompatibility(command.type, command.selector);
             if (command.type != CustomUICommandType.Set || command.selector == null) {
                 continue;
             }
@@ -79,14 +79,18 @@ final class RhythmCustomUiCommandValidator {
         }
     }
 
-    private static void validateCommandCompatibility(CustomUICommandType commandType, String selector, String commandText) {
+    private static void validateCommandCompatibility(CustomUICommandType commandType, String selector) {
         if (commandType == null || selector == null) {
             return;
         }
 
         String normalizedSelector = selector.toUpperCase(Locale.ROOT);
         if (commandType == CustomUICommandType.AppendInline && normalizedSelector.contains(LANE_TRACK_SURFACE_SELECTOR)) {
-            validateTrackSurfaceInlineHost(selector, commandText);
+            throw new IllegalStateException(
+                "HyRhythm gameplay track-surface preloads must use append(selector, documentPath), not appendInline, for '"
+                    + selector
+                    + "'."
+            );
         }
         if (commandType == CustomUICommandType.Set
             && normalizedSelector.contains("TRACKSURFACE[")
@@ -97,18 +101,6 @@ final class RhythmCustomUiCommandValidator {
                     + "'."
             );
         }
-    }
-
-    private static void validateTrackSurfaceInlineHost(String selector, String commandText) {
-        String normalizedDocument = commandText == null ? "" : commandText.toUpperCase(Locale.ROOT);
-        if (normalizedDocument.contains(GAMEPLAY_NOTE_SELECTOR_PREFIX)) {
-            return;
-        }
-        throw new IllegalStateException(
-            "HyRhythm gameplay track-surface appendInline hosts must declare an explicit stable gameplay note id for '"
-                + selector
-                + "'."
-        );
     }
 
     private static void validateSelectorCompatibility(CustomUIEventBindingType eventType, String selector) {

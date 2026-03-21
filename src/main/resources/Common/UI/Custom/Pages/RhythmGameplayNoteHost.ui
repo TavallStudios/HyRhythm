@@ -1,0 +1,6 @@
+$C = "../Common.ui";
+
+Group {
+  Visible: false;
+  Anchor: (Left: 0, Right: 0, Top: 0, Height: 32);
+}

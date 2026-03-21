@@ -308,11 +308,13 @@ class RhythmGameplayPageIntegrationTest {
 
         page.preloadGameplayRuntimeUi(preloadCommandBuilder);
 
-        assertEquals(chart.notes().size(), countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
-        assertEquals(chart.notes().size(), countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Append, "#GameplayNote_"));
+        assertEquals(0, countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
+        assertEquals(chart.notes().size(), countAppendDocument(preloadCommandBuilder.getCommands(), "TrackSurface", "Pages/RhythmGameplayNoteHost.ui"));
+        assertEquals(chart.notes().size(), countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface["));
         assertEquals(0, countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Clear, "#Lane"));
         assertTrue(containsSelector(preloadCommandBuilder.getCommands(), "#Lane1TrackSurface"));
         assertTrue(containsSelector(preloadCommandBuilder.getCommands(), "#Lane4TrackSurface"));
+        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayNoteHost.ui"));
         assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteLeft.ui"));
         assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteDown.ui"));
         assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteUp.ui"));
@@ -331,7 +333,8 @@ class RhythmGameplayPageIntegrationTest {
         page.build(null, uiCommandBuilder, uiEventBuilder, null);
 
         assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
-        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, "#GameplayNote_"));
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface["));
+        assertEquals(0, countAppendDocument(uiCommandBuilder.getCommands(), "TrackSurface", "Pages/RhythmGameplayNoteHost.ui"));
         String debugText = commandValue(uiCommandBuilder.getCommands(), "#DebugText.Text");
         assertTrue(debugText.contains("preload[chart=debug/test-4k"));
         assertTrue(debugText.contains("mode=deferred_page_open"));
@@ -356,8 +359,8 @@ class RhythmGameplayPageIntegrationTest {
         assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Clear, ""));
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Visible") > 0);
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Anchor") > 0);
-        assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "TrackSurface["));
-        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "#GameplayNote_") > 0);
+        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "TrackSurface[") > 0);
+        assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "#GameplayNoteRoot"));
         page.onDismiss(null, null);
     }
 
@@ -481,6 +484,22 @@ class RhythmGameplayPageIntegrationTest {
             if (command.selector.contains(selectorFragment)) {
                 count++;
             }
+        }
+        return count;
+    }
+
+    private static long countAppendDocument(CustomUICommand[] commands, String selectorFragment, String documentFragment) {
+        long count = 0L;
+        for (CustomUICommand command : commands) {
+            if (command == null || command.type != CustomUICommandType.Append) {
+                continue;
+            }
+            String selector = command.selector == null ? "" : command.selector;
+            String document = command.text == null ? "" : command.text;
+            if (!selector.contains(selectorFragment) || !document.contains(documentFragment)) {
+                continue;
+            }
+            count++;
         }
         return count;
     }

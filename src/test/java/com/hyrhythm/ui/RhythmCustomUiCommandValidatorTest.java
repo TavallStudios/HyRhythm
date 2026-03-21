@@ -29,14 +29,14 @@ class RhythmCustomUiCommandValidatorTest {
     }
 
     @Test
-    void allowsInlineGameplayTrackSurfaceHostsWithStableSelectors() {
+    void rejectsInlineGameplayTrackSurfaceHostsEvenWithStableSelectors() {
         UICommandBuilder uiCommandBuilder = new UICommandBuilder();
         uiCommandBuilder.appendInline(
             "#Lane4TrackSurface",
             "Group #GameplayNote_lane4_note_1 { Visible: false; }"
         );
 
-        assertDoesNotThrow(() -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
+        assertThrows(IllegalStateException.class, () -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
     }
 
     @Test
