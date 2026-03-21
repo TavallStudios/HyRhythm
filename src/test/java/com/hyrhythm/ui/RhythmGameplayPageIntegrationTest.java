@@ -295,12 +295,14 @@ class RhythmGameplayPageIntegrationTest {
         assertEquals("320", commandValue(uiCommandBuilder.getCommands(), "#ScoreValue.Text"));
         assertEquals("1", commandValue(uiCommandBuilder.getCommands(), "#ComboValue.Text"));
         assertEquals("HELD", commandValue(uiCommandBuilder.getCommands(), "#Lane3Status.Text"));
+        assertNotNull(findCommand(uiCommandBuilder.getCommands(), "#Lane3ControlRow[0] #LaneIdleReceptor.Visible"));
+        assertNotNull(findCommand(uiCommandBuilder.getCommands(), "#Lane3ControlRow[0] #LaneHitReceptor.Visible"));
         assertTrue(commandValue(uiCommandBuilder.getCommands(), "#DebugText.Text").contains("held=[3]"));
         page.onDismiss(null, null);
     }
 
     @Test
-    void deferredGameplayRuntimePreloadAppendsEntireChartAfterPageOpen() {
+    void deferredGameplayRuntimePreloadAppendsGeneratedChartAfterPageOpen() {
         RhythmSessionSnapshot startedSession = startDebugSession();
         RhythmChart chart = chart();
         RhythmGameplayPage page = createPage(startedSession, chart);
@@ -309,22 +311,26 @@ class RhythmGameplayPageIntegrationTest {
         page.preloadGameplayRuntimeUi(preloadCommandBuilder);
 
         assertEquals(0, countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
-        assertEquals(chart.notes().size(), countAppendDocument(preloadCommandBuilder.getCommands(), "TrackSurface", "Pages/RhythmGameplayNoteHost.ui"));
-        assertEquals(chart.notes().size(), countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface["));
+        assertEquals(0, countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface"));
+        assertEquals(
+            1,
+            countAppendDocument(
+                preloadCommandBuilder.getCommands(),
+                "#GameplayChartHost",
+                RhythmChartUiAssetPaths.documentPath(chart.chartId())
+            )
+        );
         assertEquals(0, countCommands(preloadCommandBuilder.getCommands(), CustomUICommandType.Clear, "#Lane"));
-        assertTrue(containsSelector(preloadCommandBuilder.getCommands(), "#Lane1TrackSurface"));
-        assertTrue(containsSelector(preloadCommandBuilder.getCommands(), "#Lane4TrackSurface"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayNoteHost.ui"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteLeft.ui"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteDown.ui"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteUp.ui"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNoteRight.ui"));
-        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayHoldNote"));
+        assertTrue(containsSelector(preloadCommandBuilder.getCommands(), "#GameplayChartHost"));
+        assertTrue(containsCommandText(preloadCommandBuilder.getCommands(), RhythmChartUiAssetPaths.documentPath(chart.chartId())));
+        assertFalse(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayNoteHost.ui"));
+        assertFalse(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayTapNote"));
+        assertFalse(containsCommandText(preloadCommandBuilder.getCommands(), "Pages/RhythmGameplayHoldNote"));
         page.onDismiss(null, null);
     }
 
     @Test
-    void gameplayPageBuildDoesNotAppendTrackSurfacePreloadsBeforePageOpen() {
+    void gameplayPageBuildDoesNotAppendGeneratedChartBeforePageOpen() {
         RhythmSessionSnapshot startedSession = startDebugSession();
         RhythmGameplayPage page = createPage(startedSession);
         UICommandBuilder uiCommandBuilder = new UICommandBuilder();
@@ -333,10 +339,11 @@ class RhythmGameplayPageIntegrationTest {
         page.build(null, uiCommandBuilder, uiEventBuilder, null);
 
         assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.AppendInline, "TrackSurface"));
-        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface["));
-        assertEquals(0, countAppendDocument(uiCommandBuilder.getCommands(), "TrackSurface", "Pages/RhythmGameplayNoteHost.ui"));
+        assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Append, "TrackSurface"));
+        assertEquals(0, countAppendDocument(uiCommandBuilder.getCommands(), "#GameplayChartHost", "Charts/debug_test-4k.ui"));
         String debugText = commandValue(uiCommandBuilder.getCommands(), "#DebugText.Text");
         assertTrue(debugText.contains("preload[chart=debug/test-4k"));
+        assertTrue(debugText.contains("doc=Charts/debug_test-4k.ui"));
         assertTrue(debugText.contains("mode=deferred_page_open"));
         assertTrue(debugText.contains("complete=false"));
         assertTrue(debugText.contains("blocked=true"));
@@ -359,8 +366,8 @@ class RhythmGameplayPageIntegrationTest {
         assertEquals(0, countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Clear, ""));
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Visible") > 0);
         assertTrue(countCommands(uiCommandBuilder.getCommands(), CustomUICommandType.Set, ".Anchor") > 0);
-        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "TrackSurface[") > 0);
-        assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "#GameplayNoteRoot"));
+        assertEquals(0, countSelectors(uiCommandBuilder.getCommands(), "TrackSurface["));
+        assertTrue(countSelectors(uiCommandBuilder.getCommands(), "#GameplayNote_") > 0);
         page.onDismiss(null, null);
     }
 

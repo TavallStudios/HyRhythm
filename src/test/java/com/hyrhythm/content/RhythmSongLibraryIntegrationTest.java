@@ -4,6 +4,7 @@ import com.hyrhythm.bootstrap.registries.CoreBootstrapRegistry;
 import com.hyrhythm.bootstrap.registries.RhythmBootstrapRegistry;
 import com.hyrhythm.content.interfaces.RhythmSongLibraryAccess;
 import com.hyrhythm.dependency.DependencyLoader;
+import com.hyrhythm.ui.RhythmChartUiAssetPaths;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RhythmSongLibraryIntegrationTest {
@@ -46,6 +46,12 @@ class RhythmSongLibraryIntegrationTest {
         assertEquals(1, songLibraryHarness.listRhythmSongs().size());
         assertEquals("HyRhythm Debug Track", songLibraryHarness.listRhythmSongs().getFirst().title());
         assertEquals("debug/test-4k", songLibraryHarness.requireDebugRhythmChart().chartId());
+        assertTrue(Files.isRegularFile(
+            RhythmChartUiAssetPaths.assetFilePath(
+                tempDataDirectory.resolve("rhythm").resolve("generated-asset-pack"),
+                "debug/test-4k"
+            )
+        ));
     }
 
     @Test
@@ -102,15 +108,11 @@ class RhythmSongLibraryIntegrationTest {
                 .resolve("Imported")
                 .resolve("Zeratch-tp-na-ame.json")
         ));
-        assertFalse(Files.exists(
-            tempDataDirectory.resolve("rhythm")
-                .resolve("generated-asset-pack")
-                .resolve("Server")
-                .resolve("Audio")
-                .resolve("SoundEvents")
-                .resolve("HyRhythm")
-                .resolve("Imported")
-                .resolve("zeratch-tp-na-ame.json")
+        assertTrue(Files.isRegularFile(
+            RhythmChartUiAssetPaths.assetFilePath(
+                tempDataDirectory.resolve("rhythm").resolve("generated-asset-pack"),
+                "zeratch-tp-na-ame/hard"
+            )
         ));
     }
 

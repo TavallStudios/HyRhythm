@@ -12,7 +12,7 @@ class RhythmCustomUiCommandValidatorTest {
     @Test
     void rejectsRuntimeTexturePathSetMutations() {
         UICommandBuilder uiCommandBuilder = new UICommandBuilder();
-        uiCommandBuilder.set("#Lane1ControlRow[0] #LaneReceptor #IdleReceptor.TexturePath", "RhythmLane1Idle.png");
+        uiCommandBuilder.set("#Lane1ControlRow[0] #LaneIdleReceptor.TexturePath", "RhythmGameplayReceptorLeftIdle.png");
 
         assertThrows(IllegalStateException.class, () -> RhythmCustomUiCommandValidator.validate(uiCommandBuilder));
     }
