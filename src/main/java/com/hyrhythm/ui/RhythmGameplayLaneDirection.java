@@ -5,6 +5,9 @@ final class RhythmGameplayLaneDirection {
         1,
         "left",
         "RhythmGameplayNoteLeft.png",
+        "Pages/RhythmGameplayLaneButtonLeft.ui",
+        "RhythmGameplayReceptorLeftIdle.png",
+        "RhythmGameplayReceptorLeftHit.png",
         "Pages/RhythmGameplayTapNoteLeft.ui",
         "Pages/RhythmGameplayHoldNoteLeft.ui"
     );
@@ -12,6 +15,9 @@ final class RhythmGameplayLaneDirection {
         2,
         "down",
         "RhythmGameplayNoteDown.png",
+        "Pages/RhythmGameplayLaneButtonDown.ui",
+        "RhythmGameplayReceptorDownIdle.png",
+        "RhythmGameplayReceptorDownHit.png",
         "Pages/RhythmGameplayTapNoteDown.ui",
         "Pages/RhythmGameplayHoldNoteDown.ui"
     );
@@ -19,6 +25,9 @@ final class RhythmGameplayLaneDirection {
         3,
         "up",
         "RhythmGameplayNoteUp.png",
+        "Pages/RhythmGameplayLaneButtonUp.ui",
+        "RhythmGameplayReceptorUpIdle.png",
+        "RhythmGameplayReceptorUpHit.png",
         "Pages/RhythmGameplayTapNoteUp.ui",
         "Pages/RhythmGameplayHoldNoteUp.ui"
     );
@@ -26,26 +35,38 @@ final class RhythmGameplayLaneDirection {
         4,
         "right",
         "RhythmGameplayNoteRight.png",
+        "Pages/RhythmGameplayLaneButtonRight.ui",
+        "RhythmGameplayReceptorRightIdle.png",
+        "RhythmGameplayReceptorRightHit.png",
         "Pages/RhythmGameplayTapNoteRight.ui",
         "Pages/RhythmGameplayHoldNoteRight.ui"
     );
 
     final int lane;
     final String idToken;
-    final String texturePath;
+    final String noteTexturePath;
+    final String laneButtonDocumentPath;
+    final String idleReceptorTexturePath;
+    final String hitReceptorTexturePath;
     final String tapDocumentPath;
     final String holdDocumentPath;
 
     private RhythmGameplayLaneDirection(
         int lane,
         String idToken,
-        String texturePath,
+        String noteTexturePath,
+        String laneButtonDocumentPath,
+        String idleReceptorTexturePath,
+        String hitReceptorTexturePath,
         String tapDocumentPath,
         String holdDocumentPath
     ) {
         this.lane = lane;
         this.idToken = idToken;
-        this.texturePath = texturePath;
+        this.noteTexturePath = noteTexturePath;
+        this.laneButtonDocumentPath = laneButtonDocumentPath;
+        this.idleReceptorTexturePath = idleReceptorTexturePath;
+        this.hitReceptorTexturePath = hitReceptorTexturePath;
         this.tapDocumentPath = tapDocumentPath;
         this.holdDocumentPath = holdDocumentPath;
     }
@@ -62,5 +83,9 @@ final class RhythmGameplayLaneDirection {
 
     String documentPath(boolean hold) {
         return hold ? holdDocumentPath : tapDocumentPath;
+    }
+
+    String generatedChartTexturePath() {
+        return "../Pages/" + noteTexturePath;
     }
 }

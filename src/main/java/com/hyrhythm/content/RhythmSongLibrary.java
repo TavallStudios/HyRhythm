@@ -7,6 +7,8 @@ import com.hyrhythm.content.model.RhythmSong;
 import com.hyrhythm.content.model.RhythmSongImportResult;
 import com.hyrhythm.logging.interfaces.RhythmLoggingAccess;
 import com.hyrhythm.settings.RhythmStoragePaths;
+import com.hyrhythm.ui.RhythmChartUiAssetPaths;
+import com.hyrhythm.ui.RhythmChartUiDocumentGenerator;
 import com.hypixel.hytale.assetstore.AssetPack;
 import com.hypixel.hytale.common.plugin.PluginManifest;
 import com.hypixel.hytale.common.semver.Semver;
@@ -37,9 +39,11 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
     private static final String GENERATED_SOUND_FILE_ROOT = "Sounds/HyRhythm/Imported";
     private static final String GENERATED_SOUND_EVENT_PATH = "Server/Audio/SoundEvents";
     private static final String GENERATED_FFMPEG_ENV = "HYRHYTHM_FFMPEG_BIN";
+    private static final String GENERATED_CHART_UI_ROOT = "Common/UI/Custom/Charts";
 
     private final RhythmChartImportService chartImportService;
     private final RhythmStoragePaths storagePaths;
+    private final RhythmChartUiDocumentGenerator chartUiDocumentGenerator = new RhythmChartUiDocumentGenerator();
     private final Map<String, RhythmChart> chartsById = new LinkedHashMap<>();
     private final Map<String, RhythmSong> songsById = new LinkedHashMap<>();
     private final Map<String, String> soundEventIdsBySongId = new LinkedHashMap<>();
@@ -161,6 +165,7 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
             }
         }
 
+        writeGeneratedChartUiAssets();
         registerGeneratedAssetPack();
         RhythmSongImportResult result = new RhythmSongImportResult(
             songsDirectory,
@@ -387,6 +392,33 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
         );
     }
 
+    private void writeGeneratedChartUiAssets() {
+        for (RhythmChart chart : chartsById.values()) {
+            writeGeneratedChartUi(chart);
+        }
+    }
+
+    private void writeGeneratedChartUi(RhythmChart chart) {
+        Path chartUiFile = RhythmChartUiAssetPaths.assetFilePath(storagePaths.getGeneratedAssetPackDirectory(), chart.chartId());
+        try {
+            Files.createDirectories(chartUiFile.getParent());
+            Files.writeString(chartUiFile, chartUiDocumentGenerator.generateDocument(chart));
+            logRhythmInfo(
+                "content",
+                "chart_ui_generated",
+                new LinkedHashMap<>() {{
+                    put("chartId", chart.chartId());
+                    put("songId", chart.songId());
+                    put("documentPath", RhythmChartUiAssetPaths.documentPath(chart.chartId()));
+                    put("assetFile", chartUiFile);
+                    put("noteCount", chart.notes().size());
+                }}
+            );
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to write generated chart UI for " + chart.chartId(), exception);
+        }
+    }
+
     private void registerGeneratedAssetPack() {
         AssetModule assetModule = AssetModule.get();
         if (assetModule == null) {
@@ -416,7 +448,7 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
                   "Group": "HyRhythm",
                   "Name": "ImportedSongs",
                   "Version": "1.0.0",
-                  "Description": "Generated sound assets for imported HyRhythm songs",
+                  "Description": "Generated sound and chart UI assets for imported HyRhythm songs",
                   "Authors": [
                     {
                       "Name": "HyRhythm",
@@ -440,7 +472,7 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
         manifest.setGroup("HyRhythm");
         manifest.setName("ImportedSongs");
         manifest.setVersion(Semver.fromString("1.0.0"));
-        manifest.setDescription("Generated sound assets for imported HyRhythm songs");
+        manifest.setDescription("Generated sound and chart UI assets for imported HyRhythm songs");
         manifest.setServerVersion("*");
         return manifest;
     }
@@ -472,6 +504,11 @@ public final class RhythmSongLibrary implements RhythmSongLibraryService, Rhythm
             .resolve("HyRhythm")
             .resolve("Imported")
             .resolve(slug(songId));
+    }
+
+    private Path generatedChartUiDirectory() {
+        return storagePaths.getGeneratedAssetPackDirectory()
+            .resolve(Path.of(GENERATED_CHART_UI_ROOT));
     }
 
     private static ZipEntry findArchiveEntry(ZipFile zipFile, String entryName) {

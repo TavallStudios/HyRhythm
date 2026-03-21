@@ -8,10 +8,7 @@ final class RhythmGameplayPreloadedNoteRenderNode {
     final RhythmGameplayLaneDirection laneDirection;
     final boolean hold;
     final int noteHeight;
-    final String laneSurfaceSelector;
-    final int laneSurfaceChildIndex;
-    final String noteRootSelector;
-    final String contentDocumentPath;
+    final String noteSelector;
 
     boolean preloadQueued;
     boolean completed;
@@ -24,20 +21,14 @@ final class RhythmGameplayPreloadedNoteRenderNode {
         RhythmGameplayLaneDirection laneDirection,
         boolean hold,
         int noteHeight,
-        String laneSurfaceSelector,
-        int laneSurfaceChildIndex,
-        String noteRootSelector,
-        String contentDocumentPath
+        String noteSelector
     ) {
         this.noteId = Objects.requireNonNull(noteId, "noteId");
         this.lane = lane;
         this.laneDirection = Objects.requireNonNull(laneDirection, "laneDirection");
         this.hold = hold;
         this.noteHeight = noteHeight;
-        this.laneSurfaceSelector = Objects.requireNonNull(laneSurfaceSelector, "laneSurfaceSelector");
-        this.laneSurfaceChildIndex = laneSurfaceChildIndex;
-        this.noteRootSelector = Objects.requireNonNull(noteRootSelector, "noteRootSelector");
-        this.contentDocumentPath = Objects.requireNonNull(contentDocumentPath, "contentDocumentPath");
+        this.noteSelector = Objects.requireNonNull(noteSelector, "noteSelector");
     }
 
     void reset() {
