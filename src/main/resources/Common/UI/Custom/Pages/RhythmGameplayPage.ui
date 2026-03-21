@@ -126,6 +126,10 @@ $C.@Container #GameplayRoot {
         Anchor: (Height: 388, Bottom: 10);
         Background: (Color: #0a0f14(0.95));
         LayoutMode: Top;
+
+        Group #Lane1TrackSurface {
+          Anchor: (Full: 0);
+        }
       }
 
       Group #Lane1ControlRow {
@@ -156,6 +160,10 @@ $C.@Container #GameplayRoot {
         Anchor: (Height: 388, Bottom: 10);
         Background: (Color: #0a0f14(0.95));
         LayoutMode: Top;
+
+        Group #Lane2TrackSurface {
+          Anchor: (Full: 0);
+        }
       }
 
       Group #Lane2ControlRow {
@@ -186,6 +194,10 @@ $C.@Container #GameplayRoot {
         Anchor: (Height: 388, Bottom: 10);
         Background: (Color: #0a0f14(0.95));
         LayoutMode: Top;
+
+        Group #Lane3TrackSurface {
+          Anchor: (Full: 0);
+        }
       }
 
       Group #Lane3ControlRow {
@@ -216,6 +228,10 @@ $C.@Container #GameplayRoot {
         Anchor: (Height: 388, Bottom: 10);
         Background: (Color: #0a0f14(0.95));
         LayoutMode: Top;
+
+        Group #Lane4TrackSurface {
+          Anchor: (Full: 0);
+        }
       }
 
       Group #Lane4ControlRow {
