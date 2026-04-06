@@ -1,0 +1,157 @@
+package com.hypixel.hytale.server.worldgen.loader.context;
+
+import com.google.gson.JsonObject;
+import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.procedurallib.file.AssetPath;
+import com.hypixel.hytale.procedurallib.file.FileIO;
+import com.hypixel.hytale.procedurallib.json.JsonLoader;
+import com.hypixel.hytale.server.worldgen.prefab.PrefabCategory;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
+import java.util.logging.Level;
+import javax.annotation.Nonnull;
+
+public class FileContextLoader {
+   private static final Comparator<AssetPath> ZONES_ORDER;
+   private static final Comparator<AssetPath> BIOME_ORDER;
+   private static final UnaryOperator<AssetPath> DISABLED_FILE;
+   private static final Predicate<AssetPath> ZONE_FILE_MATCHER;
+   private static final Predicate<AssetPath> BIOME_FILE_MATCHER;
+   private final Path dataFolder;
+   private final Set<String> zoneRequirement;
+
+   public FileContextLoader(Path dataFolder, Set<String> zoneRequirement) {
+      this.dataFolder = dataFolder;
+      this.zoneRequirement = zoneRequirement;
+   }
+
+   @Nonnull
+   public FileLoadingContext load() {
+      FileLoadingContext context = new FileLoadingContext(this.dataFolder);
+      Path zonesFolder = this.dataFolder.resolve("Zones");
+
+      try {
+         List<AssetPath> files = FileIO.list(zonesFolder, ZONE_FILE_MATCHER, DISABLED_FILE);
+         files.sort(ZONES_ORDER);
+
+         for(AssetPath path : files) {
+            String zoneName = path.getFileName();
+            if (this.zoneRequirement.contains(zoneName)) {
+               ZoneFileContext zone = loadZoneContext(zoneName, path.filepath(), context);
+               context.getZones().register(zoneName, zone);
+            }
+         }
+      } catch (IOException e) {
+         ((HytaleLogger.Api)HytaleLogger.getLogger().at(Level.SEVERE).withCause(e)).log("Failed to load zones");
+      }
+
+      try {
+         validateZones(context, this.zoneRequirement);
+      } catch (Error e) {
+         throw new Error("Failed to validate zones!", e);
+      }
+
+      loadPrefabCategories(this.dataFolder, context);
+      return context;
+   }
+
+   protected static void loadPrefabCategories(@Nonnull Path folder, @Nonnull FileLoadingContext context) {
+      AssetPath path = FileIO.resolve(folder.resolve("PrefabCategories.json"));
+      if (FileIO.exists(path)) {
+         try {
+            JsonObject json = (JsonObject)FileIO.load((AssetPath)path, JsonLoader.JSON_OBJ_LOADER);
+            FileContext.Registry var10001 = context.getPrefabCategories();
+            Objects.requireNonNull(var10001);
+            PrefabCategory.parse(json, var10001::register);
+         } catch (IOException e) {
+            throw new Error("Failed to open Categories.json", e);
+         }
+      }
+   }
+
+   @Nonnull
+   protected static ZoneFileContext loadZoneContext(String name, @Nonnull Path folder, @Nonnull FileLoadingContext context) {
+      try {
+         ZoneFileContext zone = context.createZone(name, folder);
+         List<AssetPath> files = FileIO.list(folder, BIOME_FILE_MATCHER, DISABLED_FILE);
+         files.sort(BIOME_ORDER);
+
+         for(AssetPath path : files) {
+            BiomeFileContext.Type type = BiomeFileContext.getBiomeType(path);
+            String biomeName = parseName(path, type);
+            BiomeFileContext biome = zone.createBiome(biomeName, path.filepath(), type);
+            zone.getBiomes(type).register(biomeName, biome);
+         }
+
+         return zone;
+      } catch (IOException e) {
+         throw new Error(String.format("Failed to list files in: %s", folder), e);
+      }
+   }
+
+   @Nonnull
+   protected static AssetPath getDisabledFilePath(@Nonnull AssetPath path) {
+      String filename = path.getFileName();
+      return filename.startsWith("!") ? path.rename(filename.substring(1)) : path;
+   }
+
+   protected static boolean isValidZoneFile(@Nonnull AssetPath path) {
+      return Files.isDirectory(path.filepath(), new LinkOption[0]) && Files.exists(path.filepath().resolve("Zone.json"), new LinkOption[0]);
+   }
+
+   protected static boolean isValidBiomeFile(@Nonnull AssetPath path) {
+      if (Files.isDirectory(path.filepath(), new LinkOption[0])) {
+         return false;
+      } else {
+         String filename = path.getFileName();
+
+         for(BiomeFileContext.Type type : BiomeFileContext.Type.values()) {
+            if (filename.endsWith(type.getSuffix()) && filename.startsWith(type.getPrefix())) {
+               return true;
+            }
+         }
+
+         return false;
+      }
+   }
+
+   protected static void validateZones(@Nonnull FileLoadingContext context, @Nonnull Set<String> zoneRequirement) throws Error {
+      for(String key : zoneRequirement) {
+         context.getZones().get(key);
+      }
+
+   }
+
+   @Nonnull
+   private static String parseName(@Nonnull AssetPath path, @Nonnull BiomeFileContext.Type type) {
+      String filename = path.getFileName();
+      int start = type.getPrefix().length();
+      int end = filename.length() - type.getSuffix().length();
+      return filename.substring(start, end);
+   }
+
+   static {
+      ZONES_ORDER = AssetPath.COMPARATOR;
+      BIOME_ORDER = Comparator.comparing(BiomeFileContext::getBiomeType).thenComparing(AssetPath.COMPARATOR);
+      DISABLED_FILE = FileContextLoader::getDisabledFilePath;
+      ZONE_FILE_MATCHER = FileContextLoader::isValidZoneFile;
+      BIOME_FILE_MATCHER = FileContextLoader::isValidBiomeFile;
+   }
+
+   public interface Constants {
+      int ZONE_SEARCH_DEPTH = 1;
+      int BIOME_SEARCH_DEPTH = 1;
+      String IDENTIFIER_DISABLE = "!";
+      String INFO_ZONE_IS_DISABLED = "Zone \"%s\" is disabled. Remove \"!\" from folder name to enable it.";
+      String ERROR_LIST_FILES = "Failed to list files in: %s";
+      String ERROR_ZONE_VALIDATION = "Failed to validate zones!";
+   }
+}
