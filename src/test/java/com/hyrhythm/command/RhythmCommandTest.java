@@ -18,7 +18,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmCommandIntegrationTest implements RhythmSessionAccess {
+class RhythmCommandTest implements RhythmSessionAccess {
     private CommandTestSender sender;
     private DependencyLoader loader;
     private Path tempDataDirectory;

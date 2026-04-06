@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmKeybindsPageIntegrationTest {
+class RhythmKeybindsPageTest {
     private static final UUID PLAYER_ID = UUID.fromString("7a7dddc3-c697-4bc0-ab4f-21b543fb7dc0");
     private static final Pattern COMMAND_VALUE_PATTERN = Pattern.compile("\"0\"\\s*:\\s*\"([^\"]*)\"");
 

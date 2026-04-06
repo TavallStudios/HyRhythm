@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmLaneInputRouterIntegrationTest {
+class RhythmLaneInputRouterTest {
     private static final UUID PLAYER_ID = UUID.fromString("5d664cd0-3f1b-45aa-a4f9-9c4dd7c031df");
     private static final InteractionType[] DEFAULT_INTERACTIONS = {
         InteractionType.Ability1,

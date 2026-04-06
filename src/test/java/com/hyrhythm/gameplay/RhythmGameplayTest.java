@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmGameplayIntegrationTest implements RhythmSessionAccess, RhythmGameplayAccess {
+class RhythmGameplayTest implements RhythmSessionAccess, RhythmGameplayAccess {
     private static final UUID PLAYER_ID = UUID.fromString("ee0193d9-1f4a-42e2-ac80-3f31c3326301");
     private static final long[] PERFECT_TAP_TIMES = {
         1000L, 1500L, 2000L, 3000L, 3500L, 4500L, 5500L, 6500L, 7500L, 8500L, 9000L, 9500L,
