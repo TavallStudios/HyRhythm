@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ClientPacketCodecIntegrationTest {
+class ClientPacketCodecTest {
     @Test
     void clientEncoderProducesFramesTheServerDecoderAccepts() {
         Connect connect = new Connect(

@@ -42,7 +42,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class RhythmPlayerCommandUiIntegrationTest {
+class RhythmPlayerCommandUiTest {
     private static final UUID PLAYER_ID = UUID.fromString("0a48f64b-6657-49b5-90ae-34e6d96c6c62");
 
     private DependencyLoader loader;

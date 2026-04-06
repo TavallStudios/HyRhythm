@@ -39,7 +39,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-class RhythmGameplayPageIntegrationTest {
+class RhythmGameplayPageTest {
     private static final UUID PLAYER_ID = UUID.fromString("cb54298d-bcbb-4cd7-94ed-f62374f80553");
     private static final Pattern COMMAND_VALUE_PATTERN = Pattern.compile("\"0\"\\s*:\\s*\"([^\"]*)\"");
 

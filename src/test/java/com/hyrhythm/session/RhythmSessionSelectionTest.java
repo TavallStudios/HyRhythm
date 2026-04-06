@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RhythmSessionSelectionIntegrationTest implements RhythmSessionAccess {
+class RhythmSessionSelectionTest implements RhythmSessionAccess {
     private static final UUID PLAYER_ID = UUID.fromString("1cad8a83-e795-4341-a2c2-aeb496df11fe");
 
     private DependencyLoader loader;

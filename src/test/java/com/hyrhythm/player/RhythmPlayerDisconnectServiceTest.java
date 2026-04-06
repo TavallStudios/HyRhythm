@@ -17,7 +17,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class RhythmPlayerDisconnectServiceIntegrationTest {
+class RhythmPlayerDisconnectServiceTest {
     private static final UUID PLAYER_ID = UUID.fromString("f52b1587-355c-49eb-872f-b27ad0d416a8");
 
     private DependencyLoader loader;

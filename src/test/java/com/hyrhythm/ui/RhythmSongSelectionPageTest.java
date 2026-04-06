@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmSongSelectionPageIntegrationTest {
+class RhythmSongSelectionPageTest {
     private static final UUID PLAYER_ID = UUID.fromString("d50f5b7f-53df-4453-b223-9596158efdb4");
 
     private DependencyLoader loader;

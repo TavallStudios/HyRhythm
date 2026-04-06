@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RhythmSongLibraryIntegrationTest {
+class RhythmSongLibraryTest {
     private final RhythmSongLibraryHarness songLibraryHarness = new RhythmSongLibraryHarness();
 
     private DependencyLoader loader;
