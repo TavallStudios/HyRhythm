@@ -1,0 +1,12 @@
+$C = "../Common.ui";
+
+Group #BeatmapLanePrototypeRoot {
+  Anchor: (Full: 0);
+
+  BeatmapLane #Lane1 {
+    ChartPath: "Charts/test.json";
+    ScrollSpeed: 1.0;
+    ReceptorY: 860;
+    Anchor: (Left: 560, Top: 120, Width: 120, Height: 840);
+  }
+}

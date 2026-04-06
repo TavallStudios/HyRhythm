@@ -1,0 +1,97 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.hyrhythm</groupId>
+    <artifactId>hytale-server-patch</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>hytale-server-patch</name>
+    <description>Patch overlay module for the Hytale Server jar</description>
+
+    <properties>
+        <maven.compiler.release>25</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <hytale.server.version>2026.02.19-1a311a592</hytale.server.version>
+        <patched.server.jar>Server-${hytale.server.version}-patched.jar</patched.server.jar>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>codemc-hytale</id>
+            <url>https://repo.codemc.io/repository/hytale/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hypixel.hytale</groupId>
+            <artifactId>Server</artifactId>
+            <version>${hytale.server.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-original-server-jar</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.hypixel.hytale</groupId>
+                                    <artifactId>Server</artifactId>
+                                    <version>${hytale.server.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                    <destFileName>${patched.server.jar}</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>overlay-patch-classes</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <target>
+                                <exec executable="${java.home}/bin/jar">
+                                    <arg value="uf"/>
+                                    <arg value="${project.build.directory}/${patched.server.jar}"/>
+                                    <arg value="-C"/>
+                                    <arg value="${project.build.outputDirectory}"/>
+                                    <arg value="."/>
+                                </exec>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

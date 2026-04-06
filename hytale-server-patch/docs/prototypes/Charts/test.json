@@ -1,0 +1,19 @@
+{
+  "LaneTexturePath": "../Pages/RhythmGameplayNoteLeft.png",
+  "ApproachWindowMs": 3000,
+  "BaseNoteHeight": 32,
+  "Notes": [
+    {
+      "Id": "n1",
+      "StartTimeMs": 640,
+      "EndTimeMs": 640,
+      "Hold": false
+    },
+    {
+      "Id": "n2",
+      "StartTimeMs": 1280,
+      "EndTimeMs": 1760,
+      "Hold": true
+    }
+  ]
+}

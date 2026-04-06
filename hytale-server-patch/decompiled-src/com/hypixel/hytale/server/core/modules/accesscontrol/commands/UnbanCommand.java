@@ -1,0 +1,45 @@
+package com.hypixel.hytale.server.core.modules.accesscontrol.commands;
+
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.auth.ProfileServiceClient;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncCommand;
+import com.hypixel.hytale.server.core.modules.accesscontrol.provider.HytaleBanProvider;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nonnull;
+
+public class UnbanCommand extends AbstractAsyncCommand {
+   @Nonnull
+   private final HytaleBanProvider banProvider;
+   @Nonnull
+   private final RequiredArg<ProfileServiceClient.PublicGameProfile> playerArg;
+
+   public UnbanCommand(@Nonnull HytaleBanProvider banProvider) {
+      super("unban", "server.commands.unban.desc");
+      this.playerArg = this.withRequiredArg("player", "server.commands.unban.player.desc", ArgTypes.GAME_PROFILE_LOOKUP);
+      this.setUnavailableInSingleplayer(true);
+      this.banProvider = banProvider;
+   }
+
+   @Nonnull
+   protected CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
+      ProfileServiceClient.PublicGameProfile profile = (ProfileServiceClient.PublicGameProfile)this.playerArg.get(context);
+      if (profile == null) {
+         return CompletableFuture.completedFuture((Object)null);
+      } else {
+         UUID uuid = profile.getUuid();
+         Message displayMessage = Message.raw(profile.getUsername()).bold(true);
+         if (!this.banProvider.hasBan(uuid)) {
+            context.sendMessage(Message.translation("server.modules.unban.playerNotBanned").param("name", displayMessage));
+         } else {
+            this.banProvider.modify((map) -> map.remove(uuid) != null);
+            context.sendMessage(Message.translation("server.modules.unban.success").param("name", displayMessage));
+         }
+
+         return CompletableFuture.completedFuture((Object)null);
+      }
+   }
+}

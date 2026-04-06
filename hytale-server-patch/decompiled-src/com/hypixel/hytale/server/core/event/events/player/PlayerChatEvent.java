@@ -1,0 +1,84 @@
+package com.hypixel.hytale.server.core.event.events.player;
+
+import com.hypixel.hytale.event.IAsyncEvent;
+import com.hypixel.hytale.event.ICancellable;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import java.util.List;
+import javax.annotation.Nonnull;
+
+public class PlayerChatEvent implements IAsyncEvent<String>, ICancellable {
+   @Nonnull
+   public static final Formatter DEFAULT_FORMATTER = (playerRef, msg) -> Message.translation("server.chat.playerMessage").param("username", playerRef.getUsername()).param("message", msg);
+   @Nonnull
+   private PlayerRef sender;
+   @Nonnull
+   private List<PlayerRef> targets;
+   @Nonnull
+   private String content;
+   private Formatter formatter;
+   private boolean cancelled;
+
+   public PlayerChatEvent(@Nonnull PlayerRef sender, @Nonnull List<PlayerRef> targets, @Nonnull String content) {
+      this.sender = sender;
+      this.targets = targets;
+      this.content = content;
+      this.formatter = DEFAULT_FORMATTER;
+      this.cancelled = false;
+   }
+
+   @Nonnull
+   public PlayerRef getSender() {
+      return this.sender;
+   }
+
+   public void setSender(@Nonnull PlayerRef sender) {
+      this.sender = sender;
+   }
+
+   @Nonnull
+   public List<PlayerRef> getTargets() {
+      return this.targets;
+   }
+
+   public void setTargets(@Nonnull List<PlayerRef> targets) {
+      this.targets = targets;
+   }
+
+   @Nonnull
+   public String getContent() {
+      return this.content;
+   }
+
+   public void setContent(@Nonnull String content) {
+      this.content = content;
+   }
+
+   @Nonnull
+   public Formatter getFormatter() {
+      return this.formatter;
+   }
+
+   public void setFormatter(@Nonnull Formatter formatter) {
+      this.formatter = formatter;
+   }
+
+   public boolean isCancelled() {
+      return this.cancelled;
+   }
+
+   public void setCancelled(boolean cancelled) {
+      this.cancelled = cancelled;
+   }
+
+   @Nonnull
+   public String toString() {
+      String var10000 = this.content;
+      return "PlayerChatEvent{message=" + var10000 + ", targets=" + String.valueOf(this.targets) + ", formatter=" + String.valueOf(this.formatter) + ", cancelled=" + this.cancelled + "} " + super.toString();
+   }
+
+   public interface Formatter {
+      @Nonnull
+      Message format(@Nonnull PlayerRef var1, @Nonnull String var2);
+   }
+}
