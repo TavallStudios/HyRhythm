@@ -1,0 +1,130 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {}
+
+$C.@Container {
+  Anchor: (Width: 860, Height: 620);
+  LayoutMode: Top;
+
+  Group #Header {
+    LayoutMode: Top;
+    Anchor: (Bottom: 14);
+
+    Label #PageTitle {
+      Text: "Lane Keybinds";
+      Style: (FontSize: 26, RenderBold: true, RenderUppercase: true);
+      Anchor: (Bottom: 4);
+    }
+
+    Label #PageSummary {
+      Text: "Click a lane, then type a replacement key.";
+      Style: (FontSize: 15, TextColor: #b4c0cb);
+      Anchor: (Bottom: 6);
+    }
+
+    Label #AwaitingValue {
+      Style: (FontSize: 13, TextColor: #8e9bab);
+    }
+  }
+
+  Group #LaneList {
+    LayoutMode: Top;
+    Anchor: (Bottom: 16);
+
+    Group #Lane1Row {
+      LayoutMode: Left;
+      Anchor: (Height: 52, Bottom: 10);
+
+      Label #Lane1Value {
+        FlexWeight: 1;
+        Style: (FontSize: 18, RenderBold: true, VerticalAlignment: Center);
+      }
+
+      TextButton #ChangeLane1Button {
+        Text: "Change Lane 1";
+        Padding: (Full: 6);
+        Style: $C.@DefaultTextButtonStyle;
+      }
+    }
+
+    Group #Lane2Row {
+      LayoutMode: Left;
+      Anchor: (Height: 52, Bottom: 10);
+
+      Label #Lane2Value {
+        FlexWeight: 1;
+        Style: (FontSize: 18, RenderBold: true, VerticalAlignment: Center);
+      }
+
+      TextButton #ChangeLane2Button {
+        Text: "Change Lane 2";
+        Padding: (Full: 6);
+        Style: $C.@DefaultTextButtonStyle;
+      }
+    }
+
+    Group #Lane3Row {
+      LayoutMode: Left;
+      Anchor: (Height: 52, Bottom: 10);
+
+      Label #Lane3Value {
+        FlexWeight: 1;
+        Style: (FontSize: 18, RenderBold: true, VerticalAlignment: Center);
+      }
+
+      TextButton #ChangeLane3Button {
+        Text: "Change Lane 3";
+        Padding: (Full: 6);
+        Style: $C.@DefaultTextButtonStyle;
+      }
+    }
+
+    Group #Lane4Row {
+      LayoutMode: Left;
+      Anchor: (Height: 52);
+
+      Label #Lane4Value {
+        FlexWeight: 1;
+        Style: (FontSize: 18, RenderBold: true, VerticalAlignment: Center);
+      }
+
+      TextButton #ChangeLane4Button {
+        Text: "Change Lane 4";
+        Padding: (Full: 6);
+        Style: $C.@DefaultTextButtonStyle;
+      }
+    }
+  }
+
+  Group #CapturePanel {
+    LayoutMode: Top;
+    Anchor: (Bottom: 16);
+    Background: (Color: #0d151d(0.8));
+    Padding: (Full: 10);
+
+    Label #CaptureStatus {
+      Style: (FontSize: 15, RenderBold: true, TextColor: #f0f5fb);
+      Anchor: (Bottom: 8);
+    }
+
+    Group #CaptureFieldHost {
+      Anchor: (Height: 44);
+    }
+  }
+
+  Group #Footer {
+    LayoutMode: Right;
+
+    TextButton #ResetKeybindsButton {
+      Text: "Reset to Defaults";
+      Padding: (Full: 6);
+      Style: $C.@SecondaryTextButtonStyle;
+    }
+
+    TextButton #ExitKeybindsButton {
+      Text: "Close";
+      Padding: (Full: 6);
+      Style: $C.@DefaultTextButtonStyle;
+    }
+  }
+}
