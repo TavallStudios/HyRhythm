@@ -1,24 +1,25 @@
 # Hytale Server Patch Module
 
-This module is a patch-overlay project for the upstream Hytale server jar.
+This subproject overlays focused patched classes and resources onto a copy of
+the upstream Hytale server jar.
 
 ## What lives here
 
-- `decompiled-src/` contains decompiled reference sources for the Hytale packages extracted from the upstream server jar.
-- `src/main/java/` is where patched classes should live.
-- `src/main/resources/` is where patched resources should live.
+- `decompiled-src/` contains decompiled Hytale reference sources.
+- `src/main/java/` contains patched classes.
+- `src/main/resources/` contains patched resources.
 
 ## Reference source workflow
 
-Generate or refresh the reference source tree:
+Generate or refresh the reference source tree and build a local source jar:
 
 ```bash
-scripts/decompile-hytale-server.sh --install-sources
+scripts/decompile-hytale-server.sh --build-sources
 ```
 
-That script decompiles `com/hypixel/**` from the upstream `Server` jar into
-`hytale-server-patch/decompiled-src` and optionally installs a matching
-`-sources` jar into the local Maven cache for IDE source attachment.
+The script obtains the stable upstream server reference through Gradle,
+decompiles `com/hypixel/**` into `hytale-server-patch/decompiled-src`, and
+writes the optional source jar under `build/reference-sources/`.
 
 ## Patch workflow
 
@@ -28,14 +29,14 @@ Copy a class from the reference tree into the patch source root:
 scripts/copy-hytale-class-for-patch.sh com.hypixel.hytale.server.core.ui.Anchor
 ```
 
-Edit the copied file under `src/main/java`, then build the patched server jar:
+Edit the copied file, then build the patched server export:
 
 ```bash
-mvn -f hytale-server-patch/pom.xml package
+./gradlew --no-daemon :hytale-server-patch:patchedServerJar
 ```
 
 The patched export is written to:
 
 ```text
-hytale-server-patch/target/Server-2026.02.19-1a311a592-patched.jar
+hytale-server-patch/build/distributions/Server-2026.02.19-1a311a592-patched.jar
 ```

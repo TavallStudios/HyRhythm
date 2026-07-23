@@ -12,10 +12,16 @@ version = extra["gitVersion"] as String
 
 val hytaleServerVersion = "2026.02.19-1a311a592"
 val hytaleServerCoordinates = "com.hypixel.hytale:Server:$hytaleServerVersion"
+val pluginManifestVersion = version.toString().let { buildVersion ->
+    if (buildVersion.endsWith("-SNAPSHOT")) {
+        "${buildVersion.substringBefore('-')}-SNAPSHOT"
+    } else {
+        buildVersion
+    }
+}
 
 allprojects {
     repositories {
-        mavenLocal()
         mavenCentral()
         maven {
             name = "CodeMCHytale"
@@ -77,13 +83,14 @@ tasks.withType<Jar>().configureEach {
 }
 
 tasks.processResources {
+    inputs.property("pluginManifestVersion", pluginManifestVersion)
     filesMatching("manifest.json") {
         expand(
             mapOf(
                 "project" to mapOf(
                     "groupId" to project.group.toString(),
                     "name" to rootProject.name,
-                    "version" to project.version.toString(),
+                    "version" to pluginManifestVersion,
                 ),
                 "plugin" to mapOf(
                     "main" to mapOf("class" to "com.hyrhythm.HyRhythmPlugin"),

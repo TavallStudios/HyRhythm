@@ -31,4 +31,8 @@ val branch = providers.environmentVariable("GITHUB_HEAD_REF").orNull
     ?: git("branch", "--show-current").ifBlank { "detached" }
 val qualifier = branch.replace('/', '_').replace(Regex("[^A-Za-z0-9_.-]"), "_")
 
-extra["gitVersion"] = "$numericVersion-$qualifier-SNAPSHOT"
+extra["gitVersion"] = if (exactVersion != null) {
+    numericVersion
+} else {
+    "$numericVersion-$qualifier-SNAPSHOT"
+}
