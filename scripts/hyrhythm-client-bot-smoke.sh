@@ -5,7 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SERVER_HELPER="${ROOT_DIR}/scripts/hytale-local-server.sh"
 HYTALE_ROOT="${HYRHYTHM_HYTALE_ROOT:-/srv/hytale}"
 TARGET_MOD="${HYTALE_ROOT}/Server/mods/HyRhythm.jar"
-SERVER_JAR="/home/ubuntu/.m2/repository/com/hypixel/hytale/Server/2026.02.19-1a311a592/Server-2026.02.19-1a311a592.jar"
+SERVER_VERSION="${HYTALE_SERVER_VERSION:-2026.02.19-1a311a592}"
+SERVER_JAR="${HYTALE_SERVER_JAR:-${ROOT_DIR}/build/hytale-server/Server-${SERVER_VERSION}.jar}"
+BUILT_MOD="${ROOT_DIR}/distribution/mods/HyRhythm.jar"
 START_ARGS="${HYRHYTHM_HYTALE_START_ARGS:---transport TCP --auth-mode INSECURE --allow-op}"
 INPUT_MODE="${HYRHYTHM_BOT_INPUT_MODE:-command-input}"
 GAMEPLAY_SCENARIO="${HYRHYTHM_BOT_GAMEPLAY_SCENARIO:-play-chart}"
@@ -70,6 +72,10 @@ if [ ! -x "$SERVER_HELPER" ]; then
 fi
 
 if [ ! -f "$SERVER_JAR" ]; then
+    echo "[bot-smoke] Preparing Hytale server reference jar"
+    (cd "$ROOT_DIR" && ./gradlew --no-daemon prepareHytaleServerReference)
+fi
+if [ ! -f "$SERVER_JAR" ]; then
     echo "Missing Hytale server API jar at $SERVER_JAR" >&2
     exit 1
 fi
@@ -91,16 +97,22 @@ trap 'cleanup $?' EXIT
 
 if [ "$SKIP_BUILD" = false ]; then
     echo "[bot-smoke] Building HyRhythm package and test classes"
-    (cd "$ROOT_DIR" && mvn -q -DskipTests package)
+    (cd "$ROOT_DIR" && ./gradlew --no-daemon testClasses stageDistribution)
 fi
 
-if [ ! -f "${ROOT_DIR}/target/HyRhythm.jar" ]; then
-    echo "Missing built jar at ${ROOT_DIR}/target/HyRhythm.jar" >&2
+if [ ! -f "$BUILT_MOD" ]; then
+    echo "Missing built jar at $BUILT_MOD" >&2
     exit 1
 fi
 
+if [ -f "$TARGET_MOD" ]; then
+    BACKUP_MOD="${TARGET_MOD}.pre-gradle-$(date -u +%Y%m%dT%H%M%SZ)"
+    cp -p "$TARGET_MOD" "$BACKUP_MOD"
+    echo "[bot-smoke] Preserved rollback copy at $BACKUP_MOD"
+fi
+
 echo "[bot-smoke] Deploying jar to $TARGET_MOD"
-cp -f "${ROOT_DIR}/target/HyRhythm.jar" "$TARGET_MOD"
+cp -f "$BUILT_MOD" "$TARGET_MOD"
 
 if [ "$INPUT_MODE" = "ui-packet" ]; then
     if [ -z "$GAMEPLAY_UI_REFRESH_INTERVAL_MS" ]; then
@@ -145,7 +157,7 @@ fi
 echo "[bot-smoke] Running protocol bot as $PLAYER_NAME using input mode $INPUT_MODE and scenario $GAMEPLAY_SCENARIO"
 (
     cd "$ROOT_DIR"
-    java -cp "target/test-classes:target/classes:${SERVER_JAR}" \
+    java -cp "build/classes/java/test:build/classes/java/main:${SERVER_JAR}" \
         com.hyrhythm.protocolbot.RhythmProtocolBotMain \
         --host 127.0.0.1 \
         --port 5520 \

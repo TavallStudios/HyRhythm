@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SESSION_NAME="${HYRHYTHM_UI_DEBUG_BOT_SESSION:-hyrhythm-ui-debug-bot}"
-SERVER_JAR="${HYRHYTHM_UI_DEBUG_BOT_SERVER_JAR:-/home/ubuntu/.m2/repository/com/hypixel/hytale/Server/2026.02.19-1a311a592/Server-2026.02.19-1a311a592.jar}"
+SERVER_VERSION="${HYTALE_SERVER_VERSION:-2026.02.19-1a311a592}"
+SERVER_JAR="${HYRHYTHM_UI_DEBUG_BOT_SERVER_JAR:-${ROOT_DIR}/build/hytale-server/Server-${SERVER_VERSION}.jar}"
 HOST="${HYRHYTHM_UI_DEBUG_BOT_HOST:-127.0.0.1}"
 PORT="${HYRHYTHM_UI_DEBUG_BOT_PORT:-5520}"
 PLAYER_NAME="${HYRHYTHM_UI_DEBUG_BOT_NAME:-HyRhythmUiBot}"
@@ -32,7 +33,7 @@ Environment:
                                       bot runtime timeout in seconds (default: 600)
   HYRHYTHM_UI_DEBUG_BOT_TRACE_UI      1 to enable --trace-ui (default: 1)
   HYRHYTHM_UI_DEBUG_BOT_ASSUME_OP     1 to enable --assume-op (default: 1)
-  HYRHYTHM_UI_DEBUG_BOT_SKIP_BUILD    1 to skip mvn test-compile before launch
+  HYRHYTHM_UI_DEBUG_BOT_SKIP_BUILD    1 to skip Gradle testClasses before launch
   HYRHYTHM_UI_DEBUG_BOT_UI_LOOKAHEAD_MS
                                       ui-packet mode lookahead (default: 260)
   HYRHYTHM_UI_DEBUG_BOT_CAPTURE_LINES capture line count (default: 200)
@@ -54,13 +55,13 @@ build_if_needed() {
     if [ "$SKIP_BUILD" = "1" ]; then
         return
     fi
-    (cd "$ROOT_DIR" && mvn -q -DskipTests test-compile)
+    (cd "$ROOT_DIR" && ./gradlew --no-daemon testClasses prepareHytaleServerReference)
 }
 
 bot_command() {
     local -a args
     args=(
-        java -cp "target/test-classes:target/classes:${SERVER_JAR}"
+        java -cp "build/classes/java/test:build/classes/java/main:${SERVER_JAR}"
         com.hyrhythm.protocolbot.RhythmProtocolBotMain
         --host "$HOST"
         --port "$PORT"

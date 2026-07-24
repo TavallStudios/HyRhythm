@@ -1,0 +1,6 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+# To regenerate this file, run: ./gradlew :hytale-server-patch:dependencies --write-locks
+com.hypixel.hytale:Server:2026.02.19-1a311a592=compileClasspath,patchServer
+empty=annotationProcessor

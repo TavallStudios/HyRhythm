@@ -1,30 +1,33 @@
 # HyRhythm
 
-Maven-based Hytale Java plugin scaffold.
+Hytale Java plugin built with Gradle Kotlin DSL and Java 25.
 
 ## Build
 
 ```bash
-mvn package
+./gradlew --no-daemon clean check stageDistribution
 ```
 
-The build targets Java 25 and resolves the Hytale server API from CodeMC using:
+The build resolves `com.hypixel.hytale:Server:2026.02.19-1a311a592` from the
+CodeMC Hytale repository as a provided platform dependency. The deployable thin
+plugin is staged at:
 
-- `com.hypixel.hytale:Server:2026.02.19-1a311a592`
+```text
+distribution/mods/HyRhythm.jar
+```
 
-The plugin jar is written to `target/HyRhythm.jar`.
+Dependency locking is enabled. Refresh committed lock state deliberately with
+`./gradlew --write-locks` when dependency declarations change.
 
 ## Hytale Server Patch Module
 
-The repo also includes `hytale-server-patch/`, a separate module for working on
-patches against the upstream Hytale server jar without trying to reconstruct the
-entire upstream build.
+The `hytale-server-patch/` subproject supports focused patches against the
+upstream Hytale server jar without reconstructing the upstream build.
 
-Generate reference sources from the upstream `Server` jar and install them as a
-local `-sources` artifact for IDE debugging:
+Generate reference sources and a local source-attachment jar:
 
 ```bash
-scripts/decompile-hytale-server.sh --install-sources
+scripts/decompile-hytale-server.sh --build-sources
 ```
 
 Copy a decompiled class into the patch source root:
@@ -33,18 +36,21 @@ Copy a decompiled class into the patch source root:
 scripts/copy-hytale-class-for-patch.sh com.hypixel.hytale.server.core.ui.Anchor
 ```
 
-Build a patched export jar that overlays the compiled patch classes onto the
-original server jar:
+Build a patched export that overlays the compiled patch classes onto a copy of
+the original server jar:
 
 ```bash
-mvn -f hytale-server-patch/pom.xml package
+./gradlew --no-daemon :hytale-server-patch:patchedServerJar
 ```
 
 The patched server export is written to:
 
 ```text
-hytale-server-patch/target/Server-2026.02.19-1a311a592-patched.jar
+hytale-server-patch/build/distributions/Server-2026.02.19-1a311a592-patched.jar
 ```
+
+This overlay is an intentional server-patch distribution. The ordinary
+HyRhythm plugin remains a thin jar and does not embed Hytale platform classes.
 
 ## Local Deploy And Smoke
 
@@ -54,8 +60,9 @@ scripts/hyrhythm-local-smoke.sh
 
 This script:
 
-- builds `target/HyRhythm.jar`
-- deploys it to `/srv/hytale/Server/mods/HyRhythm.jar`
+- builds `distribution/mods/HyRhythm.jar`
+- preserves the currently deployed plugin as a timestamped rollback copy
+- deploys the new jar to `/srv/hytale/Server/mods/HyRhythm.jar`
 - starts the local Hytale server in a tmux session
 - runs the command-driven playable loop smoke test
 - stops the tmux-backed server unless `--keep-running` is supplied
@@ -69,39 +76,30 @@ scripts/hytale-local-server.sh capture 200
 scripts/hytale-local-server.sh stop
 ```
 
-To run the packet-level client validation against the local server:
+To run packet-level client validation against the local server:
 
 ```bash
 scripts/hyrhythm-client-bot-smoke.sh
 ```
 
 This restarts Hytale in TCP/insecure mode with `--allow-op`, connects a real
-protocol bot, drives `/rhythm ui` -> song selection -> chart confirm ->
-`/rhythm start`, and completes the debug chart through authoritative
-`/rhythm input` commands while the gameplay UI is open. The bot-input mode is
-configurable:
+protocol bot, drives `/rhythm ui` through chart confirmation and gameplay, and
+checks the authoritative final state. The bot-input mode is configurable:
 
 ```bash
 HYRHYTHM_BOT_INPUT_MODE=ui-packet scripts/hyrhythm-client-bot-smoke.sh
 ```
 
-`ui-packet` keeps the experimental raw `CustomPageEvent` gameplay-input path
-available for diagnostics, while `command-input` is the stable smoke path. If a
-UI update is invalid enough to disconnect the client, the bot is the one that
-gets dropped instead of your real account.
+`ui-packet` preserves the experimental raw `CustomPageEvent` input path for
+diagnostics. `command-input` is the stable smoke path.
 
 ## Local-PC Tunnel Diagnostics
 
 Local-PC port forwarding, reverse-tunnel setup, and Windows-side bridge scripts
-are no longer managed from this repository. That workflow now lives in
-AgentTaskManager and on the local machine itself.
+are managed by AgentTaskManager and the local machine, not this repository.
 
-## Files
+## Important Files
 
-- `pom.xml` contains the Maven build and Hytale repository configuration.
-- `src/main/resources/manifest.json` is the plugin descriptor Hytale loads.
+- `build.gradle.kts` defines the Java 25 build, publication, verification, and distributions.
+- `src/main/resources/manifest.json` is the filtered plugin descriptor Hytale loads.
 - `src/main/java/com/hyrhythm/HyRhythmPlugin.java` is the plugin entry point.
-
-## Next steps
-
-Edit the metadata in `manifest.json` and add your plugin logic in `HyRhythmPlugin`.

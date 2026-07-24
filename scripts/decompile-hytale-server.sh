@@ -5,13 +5,13 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODULE_DIR="${ROOT_DIR}/hytale-server-patch"
 DECOMPILER_JAR="/srv/mcp-servers/jdtls/wrapped.com.jetbrains.intellij.java.java-decompiler-engine_253.29346.240.jar"
 SERVER_VERSION="${HYTALE_SERVER_VERSION:-2026.02.19-1a311a592}"
-SERVER_JAR="${HYTALE_SERVER_JAR:-${HOME}/.m2/repository/com/hypixel/hytale/Server/${SERVER_VERSION}/Server-${SERVER_VERSION}.jar}"
-INSTALL_SOURCES=0
+SERVER_JAR="${HYTALE_SERVER_JAR:-${ROOT_DIR}/build/hytale-server/Server-${SERVER_VERSION}.jar}"
+BUILD_SOURCES=0
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --install-sources)
-            INSTALL_SOURCES=1
+        --build-sources)
+            BUILD_SOURCES=1
             shift
             ;;
         --jar)
@@ -25,6 +25,10 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
+if [ ! -f "${SERVER_JAR}" ]; then
+    echo "Preparing the Hytale server reference jar"
+    (cd "${ROOT_DIR}" && ./gradlew --no-daemon prepareHytaleServerReference)
+fi
 if [ ! -f "${SERVER_JAR}" ]; then
     echo "Missing Hytale server jar at ${SERVER_JAR}" >&2
     exit 1
@@ -59,21 +63,12 @@ java -cp "${DECOMPILER_JAR}" org.jetbrains.java.decompiler.main.decompiler.Conso
     "${TMP_DIR}" \
     "${MODULE_DIR}/decompiled-src"
 
-if [ "${INSTALL_SOURCES}" -eq 1 ]; then
-    mkdir -p "${MODULE_DIR}/target"
-    SOURCES_JAR="${MODULE_DIR}/target/Server-${SERVER_VERSION}-sources.jar"
+if [ "${BUILD_SOURCES}" -eq 1 ]; then
+    mkdir -p "${MODULE_DIR}/build/reference-sources"
+    SOURCES_JAR="${MODULE_DIR}/build/reference-sources/Server-${SERVER_VERSION}-sources.jar"
     rm -f "${SOURCES_JAR}"
     jar cf "${SOURCES_JAR}" -C "${MODULE_DIR}/decompiled-src" .
-
-    echo "Installing ${SOURCES_JAR} into the local Maven cache"
-    mvn -q install:install-file \
-        -Dfile="${SOURCES_JAR}" \
-        -DgroupId=com.hypixel.hytale \
-        -DartifactId=Server \
-        -Dversion="${SERVER_VERSION}" \
-        -Dpackaging=jar \
-        -Dclassifier=sources \
-        -DgeneratePom=false
+    echo "Built source attachment jar at ${SOURCES_JAR}"
 fi
 
 echo "Reference sources are ready at ${MODULE_DIR}/decompiled-src"
