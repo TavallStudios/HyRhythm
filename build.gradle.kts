@@ -12,6 +12,7 @@ version = extra["gitVersion"] as String
 
 val hytaleServerVersion = "2026.02.19-1a311a592"
 val hytaleServerCoordinates = "com.hypixel.hytale:Server:$hytaleServerVersion"
+val tavallToolsVersion = "1.0.0"
 val pluginManifestVersion = version.toString().let { buildVersion ->
     if (buildVersion.endsWith("-SNAPSHOT")) {
         "${buildVersion.substringBefore('-')}-SNAPSHOT"
@@ -26,6 +27,28 @@ allprojects {
         maven {
             name = "CodeMCHytale"
             url = uri("https://repo.codemc.io/repository/hytale/")
+        }
+        val githubToken = providers.environmentVariable("GITHUB_TOKEN").orNull
+        if (!githubToken.isNullOrBlank()) {
+            listOf(
+                "tavall-di",
+                "tavall-cache",
+                "tavall-concurrency",
+                "tavall-database",
+                "tavall-eventbus",
+                "tavall-logging",
+                "tavall-reflection",
+                "tavall-registry",
+                "tavall-scheduler",
+            ).forEach { repository ->
+                maven("https://maven.pkg.github.com/TavallStudios/$repository") {
+                    name = "github${repository.replace("-", "")}"
+                    credentials {
+                        username = providers.environmentVariable("GITHUB_ACTOR").orElse("github").get()
+                        password = githubToken
+                    }
+                }
+            }
         }
     }
 
@@ -47,6 +70,14 @@ val hytaleServer = configurations.create("hytaleServer") {
 }
 
 dependencies {
+    implementation("org.tavall:tavall-di:$tavallToolsVersion")
+    implementation("org.tavall:tavall-registry:$tavallToolsVersion")
+    implementation("org.tavall:tavall-logging:$tavallToolsVersion")
+    implementation("org.tavall:tavall-concurrency:$tavallToolsVersion")
+    implementation("org.tavall:tavall-scheduler:$tavallToolsVersion")
+    implementation("org.tavall:tavall-eventbus:$tavallToolsVersion")
+    implementation("org.tavall:tavall-reflection:$tavallToolsVersion")
+
     compileOnly(hytaleServerCoordinates)
     testImplementation(hytaleServerCoordinates)
     hytaleServer(hytaleServerCoordinates)
@@ -58,6 +89,8 @@ dependencies {
 
 sourceSets {
     test {
+        // Transitional first-party bootstrap/dependency-loader isolation coverage.
+        // Remove with the custom DependencyLoader/BootstrapRegistry stack as Tavall DI/Registry take ownership.
         java.srcDir("src/serviceLoaderTest/java")
     }
 }
@@ -179,6 +212,8 @@ project(":hytale-server-patch") {
     }
 
     dependencies {
+        // This is still Tavall-owned Java, even though it patches an external Hytale host artifact.
+        "implementation"("org.tavall:tavall-di:$tavallToolsVersion")
         "compileOnly"(hytaleServerCoordinates)
         add(patchServer.name, hytaleServerCoordinates)
     }
