@@ -31,3 +31,5 @@ If Hytale itself requires ServiceLoader or another discovery mechanism at an ext
 Existing `*Manager` classes are legacy product debt and are not templates for new code. This platform migration does not rename unrelated gameplay classes merely to create diff noise, but touched infrastructure should converge on the current Tavall Service/Handler/Orchestrator/Registry/Runtime naming rules.
 
 Exact Java 25 tests, Hytale plugin startup, UI timing acceptance, and local client-bot smoke are required before promotion.
+
+Tavall Java tools are declared as exact source dependencies in `.tavallci` and composed by Tavall CI. Maven Local and GitHub Packages are not internal dependency authorities; CodeMC remains only for the external Hytale server artifact.

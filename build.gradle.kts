@@ -23,32 +23,15 @@ val pluginManifestVersion = version.toString().let { buildVersion ->
 
 allprojects {
     repositories {
-        mavenCentral()
+        mavenCentral {
+            content {
+                excludeGroupByRegex("org\\.tavall(?:\\..*)?")
+                excludeGroupByRegex("com\\.tavall(?:\\..*)?")
+            }
+        }
         maven {
             name = "CodeMCHytale"
             url = uri("https://repo.codemc.io/repository/hytale/")
-        }
-        val githubToken = providers.environmentVariable("GITHUB_TOKEN").orNull
-        if (!githubToken.isNullOrBlank()) {
-            listOf(
-                "tavall-di",
-                "tavall-cache",
-                "tavall-concurrency",
-                "tavall-database",
-                "tavall-eventbus",
-                "tavall-logging",
-                "tavall-reflection",
-                "tavall-registry",
-                "tavall-scheduler",
-            ).forEach { repository ->
-                maven("https://maven.pkg.github.com/TavallStudios/$repository") {
-                    name = "github${repository.replace("-", "")}"
-                    credentials {
-                        username = providers.environmentVariable("GITHUB_ACTOR").orElse("github").get()
-                        password = githubToken
-                    }
-                }
-            }
         }
     }
 
