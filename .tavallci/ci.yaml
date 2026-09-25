@@ -1,0 +1,31 @@
+version: 2
+
+source:
+  repository: TavallStudios/HyRhythm
+  provider: github
+
+build:
+  type: gradle
+  java: 25
+  gradle: 9.6.1
+
+resources:
+  mode: SYSTEM
+
+artifacts:
+  - name: hyrhythm-plugin
+    path: build/libs/HyRhythm.jar
+
+requiredChecks:
+  - quality
+
+checks:
+  quality:
+    executor: gradle
+    tasks:
+      - "clean"
+      - ":hytale-server-patch:clean"
+      - "check"
+      - ":hytale-server-patch:check"
+      - "assemble"
+      - ":hytale-server-patch:assemble"
