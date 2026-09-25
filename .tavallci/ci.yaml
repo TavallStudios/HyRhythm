@@ -1,0 +1,71 @@
+version: 2
+
+source:
+  repository: TavallStudios/HyRhythm
+  provider: github
+
+build:
+  type: gradle
+  java: 25
+  gradle: 9.6.1
+
+resources:
+  mode: SYSTEM
+
+dependencies:
+  - kind: source
+    identity: TavallStudios/tavall-cache
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-concurrency
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-database
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-di
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-eventbus
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-logging
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-reflection
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-registry
+    role: SHARED_DEP
+    selector: required-source
+  - kind: source
+    identity: TavallStudios/tavall-scheduler
+    role: SHARED_DEP
+    selector: required-source
+
+artifacts:
+  - name: hyrhythm-plugin
+    path: build/libs/HyRhythm.jar
+  - name: hyrhythm-patched-server
+    path: hytale-server-patch/build/distributions/Server-2026.02.19-1a311a592-patched.jar
+
+requiredChecks:
+  - quality
+
+checks:
+  quality:
+    executor: gradle
+    tasks:
+      - "clean"
+      - ":hytale-server-patch:clean"
+      - "check"
+      - ":hytale-server-patch:check"
+      - "assemble"
+      - ":hytale-server-patch:assemble"
