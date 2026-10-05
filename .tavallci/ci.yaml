@@ -12,6 +12,9 @@ build:
 resources:
   mode: SYSTEM
 
+modules:
+  - hytale-server-patch
+
 dependencies:
   - kind: source
     identity: TavallStudios/tavall-cache
@@ -48,13 +51,10 @@ dependencies:
   - kind: source
     identity: TavallStudios/tavall-scheduler
     role: SHARED_DEP
-    selector: required-source
 
 artifacts:
   - name: hyrhythm-plugin
     path: build/libs/HyRhythm.jar
-  - name: hyrhythm-patched-server
-    path: hytale-server-patch/build/distributions/Server-2026.02.19-1a311a592-patched.jar
 
 requiredChecks:
   - quality
@@ -64,8 +64,5 @@ checks:
     executor: gradle
     tasks:
       - "clean"
-      - ":hytale-server-patch:clean"
       - "check"
-      - ":hytale-server-patch:check"
       - "assemble"
-      - ":hytale-server-patch:assemble"
