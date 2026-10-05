@@ -1,37 +1,44 @@
 package com.hyrhythm.ui;
 
+import org.tavall.scheduler.CustomScheduler;
+
 import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * HyRhythm-owned UI scheduling adapter backed by the canonical Tavall Scheduler.
+ *
+ * The adapter preserves the existing UI-facing API while removing the plugin-local
+ * ScheduledExecutorService/thread-factory implementation.
+ */
 public final class RhythmGameplayUiScheduler implements AutoCloseable {
-    private static final AtomicInteger THREAD_COUNTER = new AtomicInteger(1);
+    private final CustomScheduler scheduler;
 
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable, "hyrhythm-ui-" + THREAD_COUNTER.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
+    public RhythmGameplayUiScheduler() {
+        this(new CustomScheduler());
+    }
+
+    RhythmGameplayUiScheduler(CustomScheduler scheduler) {
+        this.scheduler = Objects.requireNonNull(scheduler, "scheduler");
+    }
 
     public ScheduledFuture<?> scheduleAtFixedRate(Runnable runnable, long initialDelayMs, long periodMs) {
-        Objects.requireNonNull(runnable, "runnable");
-        return executor.scheduleAtFixedRate(runnable, initialDelayMs, periodMs, TimeUnit.MILLISECONDS);
+        return scheduler.runTaskRepeating(
+            Objects.requireNonNull(runnable, "runnable"),
+            initialDelayMs,
+            periodMs
+        );
     }
 
     public ScheduledFuture<?> schedule(Runnable runnable, long delayMs) {
-        Objects.requireNonNull(runnable, "runnable");
-        return executor.schedule(runnable, delayMs, TimeUnit.MILLISECONDS);
+        return scheduler.runTaskLater(
+            Objects.requireNonNull(runnable, "runnable"),
+            delayMs
+        );
     }
 
     @Override
     public void close() {
-        executor.shutdownNow();
+        scheduler.shutdown();
     }
 }
